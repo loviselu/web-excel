@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML  xmlns="http://www.w3.org/1999/xhtml">
+  <HEAD>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <TITLE>顺表电子表格控件演示 - 6excel.com</TITLE>
+    <!--[if IE]>
+    <STYLE type=text/css media=screen>@import url(./ie.css );
+    </STYLE>
+    <![endif]-->
+    <!--[if lte IE 7]>
+        <style type="text/css" media="screen">
+    		@import url("./ie7.css");
+    	</style>	
+    	<![endif]-->
+    <!--SCRIPT type=text/javascript src="js/ext-base.js"></SCRIPT-->
+    <!--SCRIPT type=text/javascript src="js/ext-all0.js"></SCRIPT-->
+    
+    <link rel="stylesheet" type="text/css" href="ext-2.2/resources/css/ext-all.css" />
+ 	<script type="text/javascript" src="ext-2.2/adapter/ext/ext-base.js"></script>
+    <script type="text/javascript" src="ext-2.2/ext-all.js"></script>
+    	
+    <SCRIPT type=text/javascript src="js/6excel.js"></SCRIPT>
+	<SCRIPT type=text/javascript src="js/in-min.js"></SCRIPT>
+    <link rel="stylesheet" type="text/css" href="js/6excel.css" />
+    <SCRIPT type=text/javascript> 	
+        function load(){
+        	window.ogID = '' ;
+			window.ogWID = '' ;
+		
+        	var application = new Bao.Excel(document.body);
+			In.add('dragCopy',{path:'js/dragCopy.js',type:'js',charset:'utf-8'});
+			In.ready('dragCopy',function() {
+				dragCopy();
+			});
+        }
+    </SCRIPT>
+	
+  </HEAD>
+  <BODY id=body onload=load();>
+    <DIV id=west>
+    </DIV>
+    <DIV id=north>
+    </DIV>
+    <DIV style="Z-INDEX: 50000; POSITION: absolute" id=dialog-container>
+    </DIV>
+    <DIV id=center>
+    </DIV>
+    <DIV style="WIDTH: 200px; HEIGHT: 200px; OVERFLOW: hidden" id=east>
+    </DIV>
+    <DIV id=south>
+    </DIV>
+  </BODY>
+</HTML>
