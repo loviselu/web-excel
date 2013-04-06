@@ -478,12 +478,13 @@ function toBoolFromString(val){
 }
 function JsonHandler(){
   var self=this;
-  //sheet参数即为Sheet类型的变量
+  //返回导出表格的json，sheet参数即为Sheet类型的变量
+  //chenjiabin
   self.exportSheet=function(sheet){
-    var formula=null;
-    var json="{\"sheetId\":null,\"sheetName\":\"sheet1\",\"cells\":[";
+	var formula=null;
+    var json="{\"sheetId\":null,\"sheetName\":\"\",\"cell\":{";
     var cells="";
-    for(var i=0;i<sheet.cells.length;i++){
+	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
         for(var j=0;j<sheet.cells[i].length;j++){
           if(sheet.cells[i][j]){
@@ -499,43 +500,64 @@ function JsonHandler(){
             }else {
               value="\""+addslashes(value)+"\"";
             }
-            cells+=",{\"r\":\""+i+"\",\"c\":\""+j+"\",\"f\":"+formula+",\"v\":"+value+",\"fs\":\""+sheet.cells[i][j].getFontStyleId()+"\",\"ls\":\"0\"}";
+			try{
+				var addressName = window.model.model.namespace.getRangeName(new Range({row:i,col:j}));
+			}catch(e){
+				alert('请稍后再试');
+				return {};
+			}
+            cells+=","+addressName+":{\"f\":"+formula+",\"v\":"+value+",\"fs\":\""+sheet.cells[i][j].getFontStyleId()+"\"}";
           }
         }
       }
     }
-    json+=cells.substr(1);
-    json+="]";
+	json+=cells.substr(1);
+	json+="}";
+	json+=',"fontStyles":'+self.exportFontStyles();
     json+="}";
     return json;
   };
-  self.exportBook=function(id,book,sheet){
-    if(id==undefined){
-      id="null";
-    }
-    var json="{\"bookId\":"+id+",\"bookName\":\""+book.getName()+"\"";
-    json+=",\"bookContent\":{";
-    json+="\"sheets\":[";
-    json+=self.exportSheet(sheet);
-    json+="]";
-    json+=",\"fontStyles\":"+self.exportFontStyles();
-    json+="}";
-    json+="}";
-    return json;
-  };
+  //chenjiabin
+  self.exportCell = function(address){
+	var json = '{"cell":{"';
+	var addressName = window.model.model.namespace.getRangeName(new Range(address));
+	var cell = window.model.model.getCell(address.row,address.col);
+	var fontStyle = Styler.getFontStyleById(cell.getFontStyleId()).id;
+	var oldFontStyle = Styler.getFontStyleById(cell.getOldFontStyleId()).id;
+	json+=addressName+'":{"old":{';
+	json+='"f":"'+cell.getOldFormula();
+	json+='","fs":"'+cell.getOldFontStyleId()+'|'+oldFontStyle;
+	json+='"},"now":{';
+	json+='"f":"'+cell.getFormula();
+	json+='","fs":"'+cell.getFontStyleId()+'|'+fontStyle;
+	json+='"}}}}';
+	return json;
+  }
+  // self.exportBook=function(id,book,sheet){
+    // if(id==undefined){
+      // id="null";
+    // }
+    // var json="{\"bookId\":"+id+",\"bookName\":\""+book.getName()+"\"";
+    // json+=",\"bookContent\":{";
+    // json+="\"sheets\":[";
+    // json+=self.exportSheet(sheet);
+    // json+="]";
+    // json+=",\"fontStyles\":"+self.exportFontStyles();
+    // json+="}";
+    // json+="}";
+    // return json;
+  // };
+  //将导出的fontStyle设置为一个字符串，字符串中用“|”分隔开各个样式参数，第一个参数为fontStyleId，接下来的参数与FontStyle类中id顺序相同
+  //chenjiabin
   self.exportFontStyles=function(){
     var styles=Styler.getAllFontsStyles();
-    var json="";
-    var align=0;
-    var valign=0;
+    var json='';
     for(var item in styles){
-      align=Styler.getAlignId(styles[item].align);
-      valign=Styler.getValignId(styles[item].valign);
       if(item!="remove"){
-        json+=",{\"fontStyleId\":\""+item+"\",\"fontId\":\""+(styles[item].font)+"\",\"fontBold\":\""+toBool(styles[item].bold)+"\",\"fontItalic\":\""+toBool(styles[item].italic)+"\",\"fontSize\":\""+styles[item].size+"\",\"fontColor\":\""+styles[item].color+"\",\"fontUnderline\":\""+toBool(styles[item].underline)+"\",\"fontHAlign\":"+align+",\"fontVAlign\":"+valign+"}";
+        json+=','+'"'+item+'|'+styles[item].id+'"';
       }
     }
-    json="["+json.substr(1)+"]";
+    json='['+json.substr(1)+']';
     return json;
   };
   self.importBook=function(configs,data){
@@ -1146,6 +1168,7 @@ function Application(container){
     self.sheets.push(sheet);
 	//当前面板
     self.activeSheet=sheet;
+	//存储设定的样式信息
     self.Styler=new StyleHandler(configs.style);
     self.CommManager=new CommHandler(configs.communication);
 	//工具条
@@ -2756,6 +2779,7 @@ function GridModel(grid){
     }
   };
   //活动cell改变函数，派发ActiveCellChanged事件
+  //chenjiabin,给activeCell设置旧的样式id，和旧的值（公式），以便在改变后可以获得。
   self.changeActiveCell=function(address){
     if(address!=undefined){
       self.activeCell=address;
@@ -2764,6 +2788,11 @@ function GridModel(grid){
     if(value==undefined){
       value="";
     }
+	var cell = this.model.getCell(self.activeCell.row,self.activeCell.col);
+	if(cell!=undefined){
+		cell.setOldFontStyleId(cell.getFontStyleId());
+		cell.setOldFormula(value);
+	}
     self.fire("ActiveCellChanged",value);//value为当前change后的activeCell的值
   };
   //给活动的cell设置formula，并且计算公式结果，dontTrigger表示是否触发事件
@@ -3359,7 +3388,8 @@ function addDataModelSelection(self,grid){
       self.selection.setSelection(absRange);
     }
     var activeCell=self.selection.getActiveSelection().start;
-	//但处于拖动复制状态时只能选择行或者列。chenjiabin
+	//处于拖动复制状态时只能选择行或者列
+	//chenjiabin
 	if(grid.dragCopying){
 		if(activeCell.col!==end.col&&activeCell.row!==end.row){
 			if(Math.abs(activeCell.col-end.col)>Math.abs(activeCell.row-end.row)){
@@ -4332,7 +4362,7 @@ function f_tokenStack(){
     return ((this.token())?this.token().subtype:"");
   };
 }
-function getTokens(formula){
+window.getTokens = function(formula){
   var tokens=new f_tokens();
   var tokenStack=new f_tokenStack();
   var offset=0;
@@ -4655,6 +4685,7 @@ var TYPE_LOGIC=3;
 function isNumeric(value){
   return !isNaN(Number(value));
 }
+//chenjiabin,添加oldFontStyleId,添加oldFormula
 function Cell(row,column){
   var self=this;
   self.construct=function(row,column){
@@ -4663,11 +4694,13 @@ function Cell(row,column){
     this.formula=undefined;
 	//value要为string类型，不然当为数字0时在表格中将不显示
     this.value=undefined;
+	this.oldFormula = undefined;
     this.formatedValue=undefined;
     this.decimals=undefined;
     this.type=TYPE_GENERAL;
     this.valueType=TYPE_GENERAL;
     this.fontStyleId=0;
+	this.oldFontStyleId=0;
     this.layerStyleId=0;
     this.references=new Array();
   };
@@ -4757,6 +4790,12 @@ function Cell(row,column){
   self.setFontStyleId=function(fontStyleId){
     this.fontStyleId=fontStyleId;
   };
+  self.getOldFontStyleId=function(){
+    return this.oldFontStyleId;
+  };
+  self.setOldFontStyleId=function(fontStyleId){
+    this.oldFontStyleId=fontStyleId;
+  };
   self.getLayerStyleId=function(){
     return this.layerStyleId;
   };
@@ -4775,6 +4814,12 @@ function Cell(row,column){
   self.getFormula=function(){
     return this.formula;
   };
+  self.getOldFormula=function(){
+	return this.oldFormula;
+  }
+  self.setOldFormula=function(formula){
+	this.oldFormula = formula;
+  }
    //这里的setFormula与Sheet类里面的setFormula不同
   self.setFormula=function(value){
     self.formula=value;
@@ -4880,7 +4925,7 @@ var RNG_CELL=0;
 var RNG_ROW=1;
 var RNG_COLUMN=2;
 //选择范围
-function Range(start,end){
+window.Range = function(start,end){
   var self=this;
   this.start=start;
   this.end=end;
