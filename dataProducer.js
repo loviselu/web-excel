@@ -90,12 +90,17 @@ exports.update = function (id, data, callback) {
 				var conflict = [];
 				var newData = {};
 				for (var key in data) {
-					if (result['data'][key] && data[key]['before'] !== result['data'][key]) {
-						conflict.push(key);
-					} else {
+					var flag = true;
+					for (var prop in data[key]) {
+						if (result['data'][key][prop] && data[key]['before'][prop] !== result['data'][key][prop]) {
+							conflict.push(key);
+							flag = false;
+							break;
+						}
+					}
+					if (flag) {
 						newData[key] = data[key]['now'];
 					}
-
 				}
 				if (conflict.length > 0) {
 					return callback(null, {"code": -1, "conflict": conflict});
