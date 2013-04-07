@@ -38,13 +38,18 @@ exports.get = function (id, callback) {
 			return callback(err);
 		}
 		db.collection('document', function (err, collection) {
-			collection.findOne({_id: new ObjectID(id)}, function (err, result) {
-				if (err) {
-					console.error(err.message);
-					return callback(err);
-				}
-				return callback(null, result);
-			});
+			if (typeof id === 'string' && id.length === 24) {
+				collection.findOne({_id: new ObjectID(id)}, function (err, result) {
+					if (err) {
+						console.error(err.message);
+						return callback(err);
+					}
+					return callback(null, result);
+				});
+
+			} else {
+				return callback(new Error('id invalid'));
+			}
 		});
 	});
 };
