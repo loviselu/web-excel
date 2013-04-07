@@ -1,10 +1,12 @@
-var express = require('express'), 
+var http = require('http'),
+	https = require('https'),
+	express = require('express'),
 	fs = require('fs'), 
 	path = require('path'), 
 	crypto = require('crypto'),
 	db = require('./dataProducer.js'), 
 	ws = require('ws').Server, 
-	//util = require('util'),
+	util = require('util'),
 	app = express(), 
 	wss = new ws({port: 8080}), 
 	connections = {};
@@ -12,7 +14,7 @@ var express = require('express'),
 app.use('/excel-editor', express.static(__dirname + '/excel-editor'));
 app.use('/themes', express.static(__dirname + '/excel-editor/themes'));
 
-app.get(/^\/|\/index\.html/, function (req, res) {
+app.get(/^(\/|\/index\.html)$/, function (req, res) {
 	fs.readFile('excel-editor/index.html', 'utf-8', function(err, data){
 		if (err) {
 			console.error(err.message);
@@ -24,18 +26,23 @@ app.get(/^\/|\/index\.html/, function (req, res) {
 });
 
 app.get('/:doc', function (req, res) {
-	if (!db.get(req.params.doc)) {
-		res.redirect('/');	
-	} else {
-		fs.readFile('excel-editor/index.html', 'utf-8', function(err, data){
-			if (err) {
-				console.error(err.message);
-				res.end('error');
-			} else {
-				res.end(data);
-			}
-		});
-	}
+	db.get(req.params.doc, function (err, data) {
+		if (err) {
+			console.log(err.message);
+			res.redirect(301, '/');
+		} else if (data != null) {
+			fs.readFile('excel-editor/index.html', 'utf-8', function(err, data){
+				if (err) {
+					console.error(err.message);
+					res.end('error');
+				} else {
+					res.end(data);
+				}
+			});
+		} else {
+			res.redirect(301, '/');
+		}
+	});
 });
 
 // app.post('/register', function (req, res) {
@@ -122,7 +129,7 @@ wss.on('connection', function(socket) {
 	        		console.error(err.message);
 	        		socket.send('{"code" : -2, error : "同步失败"}');
 	        	} else {
-	        		console.log(data);
+	        		console.log(JSON.stringify(data, null, 4));
 	        		if (data.code == -1) {
 	        			//冲突
 	        			socket.send(JSON.stringify(data));
@@ -154,14 +161,23 @@ wss.on('connection', function(socket) {
     		console.error(err.message);
     		socket.send('{"code" : -4, error : "系统错误"}');
     	} else {
-    		console.log(data);
+    		console.log(JSON.stringify(data, null, 4));
 	    	socket.send(JSON.stringify({"code" : 2, "data" : {"title" : data.data.sheetId, "count" : doc.length - 1}}));
 	    	broadcast(socket, doc, JSON.stringify({"code" : 3, "data" : {"count" : doc.length - 1}}));
 	    }
     });
 });
 
-app.listen(3000);
+// var options = {
+// 	key: fs.readFileSync("test/server.key"),
+// 	cert: fs.readFileSync("test/server.crt"),
+// 	ca: fs.readFileSync("test/ca.crt"),
+// 	requestCert: true,
+// 	rejectUnauthorized: true 
+// };
+
+http.createServer(app).listen(3000);
+//https.createServer(options, app).listen(443);
 
 function broadcast (socket, doc, message) {
 	for (var i = 0; i < doc.socketList.length; i++) {
