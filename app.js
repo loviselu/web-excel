@@ -21,6 +21,10 @@ app.use('/images', express.static(__dirname + '/public/images'));
 app.use('/excel-editor', express.static(__dirname + '/excel-editor'));
 app.use('/themes', express.static(__dirname + '/excel-editor/themes'));
 
+app.use(express.cookieParser('secret'));
+app.use(express.cookieSession());
+app.use(express.bodyParser());
+
 //加载控制器
 var controllers = ['user', 'index', 'user'];
 controllers.forEach(function (v) {

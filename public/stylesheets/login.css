@@ -61,21 +61,23 @@ a img {
 	margin-right: 5px;
 }
 
-.lo_header {
+.co_header {
+	border-bottom: 1px solid #dbdbdb;
+
+}
+.co_header .content{
 	width: 1000px;
 	margin: 0 auto;
 	height: 100px;
 }
 
-.lo_header .title {
+.co_header .content .title {
 	font-size: 30px;
-
 	margin-top: 29px;
 	display: inline-block;
 }
 
 .lo_main {
-	border-top: 1px solid #dbdbdb;
 	border-bottom: 1px solid #dbdbdb;
 	height: 385px;
 }
@@ -168,4 +170,66 @@ a img {
 	position: absolute;
 	top: 263px;
 	right: 21px;
+}
+
+.re_main .content{
+	width:1000px;
+	margin:0 auto;
+}
+
+.re_main .title{
+    padding-top: 20px;
+
+    padding-bottom: 10px;
+}
+
+.re_main .title .s1{
+    font-size: 22px;
+
+}
+.re_main .title .s2{
+    color:  #979797;
+
+    font-size: 12px;
+}
+.re_main .line{
+    margin-top: 10px;
+
+}
+.re_main .line label{
+    display: inline-block;
+
+    width: 100px;
+    font-size: 14px;
+    text-align: right;
+}
+.re_main .line .input1{
+	width: 310px;
+	padding-left: 3px;
+	font-size: 14px;
+	line-height: 36px;
+	height: 36px;
+	display: inline-block;
+	color: #707070;
+	border: #c7c7c7 1px solid
+}
+
+.re_main .line .input2{
+	width: 150px;
+	padding-left: 3px;
+	font-size: 14px;
+	line-height: 36px;
+	height: 36px;
+	display: inline-block;
+	color: #707070;
+	border: #c7c7c7 1px solid
+}
+
+.register_btn{
+	width: 152px;
+	height: 41px;
+	background-image: url(../images/zc_btn.jpg);
+	margin-left: 100px;
+	margin-top: 15px;
+	cursor: pointer;
 }

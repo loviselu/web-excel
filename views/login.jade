@@ -4,8 +4,9 @@ html
         title=title
         link(rel='stylesheet', href='/stylesheets/login.css')
     body
-        .lo_header
-            hl.title 三联表格
+        .co_header
+            .content
+                hl.title #{title}
         .lo_main
             .content.fix
                 .main_left
@@ -23,7 +24,7 @@ html
                 .main_center
                 .main_right
                     .title 登陆
-                    form(method='POST')
+                    form(method='POST',action='/user/login')
                         input.textbox(name='email',type='text',placeholder='输入注册邮箱')
                         input.textbox(name='password',type='password',placeholder='请输入密码')
                         .wrap
@@ -31,11 +32,16 @@ html
                             label.mr5(for='checkbox1')  记住密码
                             input#checkbox2(type='checkbox')
                             label.mr5(for='checkbox2')  安全登陆
-                        a.loginBtn(onclick="javascrip:login()",href="#")
-                            img(border="0",src="images/btn.jpg")
+                        a.loginBtn(href="javascript:login();")
                         p.p1
                             | 你还没有帐号?
                             br
-                            a(href='javascript') 免费注册
+                            a(href='/user/register') 免费注册
         .lo_intro
         .lo_footer
+
+    script
+        function login(){
+            document.forms[0].submit();
+            return false;
+        }
