@@ -5,6 +5,10 @@
 var CONFIG = require('../config');
 var MongoClient = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
+var crypto = require('crypto');
+function md5 (text) {
+	return crypto.createHash('md5').update(text).digest('hex');
+};
 
 exports.routes = [
 	{
@@ -22,6 +26,11 @@ exports.routes = [
 		'method': 'get',
 		'handler': 'showRegister'
 	},
+	{
+		'pattern': '/user/register',
+		'method': 'post',
+		'handler': 'register'
+	}
 ];
 
 /**
@@ -40,9 +49,30 @@ exports.index = function (req, res) {
  */
 exports.login = function (req, res){
 	if(req.body.email && req.body.password){
-		console.log('hh')
-	}else{
+		MongoClient.connect(CONFIG.DBPATH, function (err, db) {
+			if (err) {
+				console.error(err.message);
+				res.end('数据库错误，请重试');
+			}
+			db.collection('user', function (err, collection) {
+				collection.findOne({email:req.body.email}, function (err, item) {
+					if (err) {
+						console.error(err.message);
+						return callback(err);
+					}
+					if(item && md5(req.body.password) === item.password){
+						req.session.userId = item._id;
+						req.session.username = item.username;
+						res.redirect('/');
+					}else{
+						res.end('帐号或密码错误');
+					}
 
+				})
+			})
+		});
+	}else{
+		res.end('请完整填写注册资料');
 	}
 }
 
@@ -62,8 +92,37 @@ exports.showRegister = function(req,res){
  */
 exports.register = function(req,res){
 	if(req.body.email && req.body.password && req.body.username){
+		MongoClient.connect(CONFIG.DBPATH, function (err, db) {
+			if (err) {
+				console.error(err.message);
+				return callback(err);
+			}
+			db.collection('user', function (err, collection) {
+				collection.findOne({email:req.body.email}, function (err, item) {
+					if (err) {
+						console.error(err.message);
+						return callback(err);
+					}
+					if(item){
+						res.end('该Email已被注册');
+					}else{
+						collection.insert({
+							email:req.body.email,
+							username:req.body.username,
+							password:md5(req.body.password)
+						},{w:1},function(err,result){
+							collection.findOne({email:req.body.email}, function (err, item){
+								req.session.userId = item._id;
+								req.session.username = item.username;
+								res.redirect('/');
+							})
+						})
+					}
 
+				})
+			})
+		});
 	}else{
-
+		res.end('请完整填写注册资料');
 	}
 }

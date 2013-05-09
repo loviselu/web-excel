@@ -1,5 +1,5 @@
 var fs = require('fs'),
-	db = require('./models/dataProducer'),
+	db = require('../models/dataProducer'),
 	undefined;
 
 exports.routes = [

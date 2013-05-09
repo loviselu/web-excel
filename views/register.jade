@@ -6,7 +6,7 @@ html
     body
         .co_header
             .content
-                hl.title #{title}
+                .title #{title}
         .re_main
             .content
                 .title
@@ -25,4 +25,4 @@ html
                     .line
                         label 确认密码：
                         input.input1(type='text',name='password2')
-                    .submit.register_btn
+                    button.register_btn(type='submit')

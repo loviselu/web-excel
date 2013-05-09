@@ -6,7 +6,7 @@ html
     body
         .co_header
             .content
-                hl.title #{title}
+                .title #{title}
         .lo_main
             .content.fix
                 .main_left
@@ -32,16 +32,10 @@ html
                             label.mr5(for='checkbox1')  记住密码
                             input#checkbox2(type='checkbox')
                             label.mr5(for='checkbox2')  安全登陆
-                        a.loginBtn(href="javascript:login();")
+                        button.loginBtn(type='submit')
                         p.p1
                             | 你还没有帐号?
                             br
                             a(href='/user/register') 免费注册
         .lo_intro
         .lo_footer
-
-    script
-        function login(){
-            document.forms[0].submit();
-            return false;
-        }

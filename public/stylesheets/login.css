@@ -73,8 +73,7 @@ a img {
 
 .co_header .content .title {
 	font-size: 30px;
-	margin-top: 29px;
-	display: inline-block;
+	padding-top: 25px;
 }
 
 .lo_main {
@@ -162,6 +161,8 @@ a img {
 	width: 158px;
 	height: 47px;
 	background-image: url(../images/btn.jpg);
+	border: none;
+	cursor: pointer;
 }
 
 .main_right .p1 {
@@ -232,4 +233,6 @@ a img {
 	margin-left: 100px;
 	margin-top: 15px;
 	cursor: pointer;
+	display: block;
+	border: none;
 }
