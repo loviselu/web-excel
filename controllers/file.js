@@ -10,6 +10,7 @@ exports.routes = [
 	}
 ];
 
+//显示文件
 exports.showFileById = function (req, res) {
 	db.get(req.params.doc, function (err, data) {
 		if (err) {
@@ -21,6 +22,7 @@ exports.showFileById = function (req, res) {
 					console.error(err.message);
 					res.end('error');
 				} else {
+					res.set('Content-Type', 'text/plain');
 					res.end(data);
 				}
 			});
@@ -29,3 +31,26 @@ exports.showFileById = function (req, res) {
 		}
 	});
 };
+
+/**
+ *   返回我的文档、共享给我的和回收站的文件
+ *   返回格式：
+ *   {
+ *       "myFile":[
+ *          {
+ *              fileId:'asgadsg',
+ *              fileName:'adsgdgf'
+ *          }
+ *        ],
+ *        "shareToMe":[
+ *          {
+ *              fileId:'asgadsg',
+ *              fileName:'adsgdgf'
+ *          }
+ *        ],
+ *        "recycle":[]
+ *   }
+ */
+exports.list = function(req,res){
+
+}

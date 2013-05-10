@@ -26,7 +26,7 @@ app.use(express.cookieSession());
 app.use(express.bodyParser());
 
 //加载控制器
-var controllers = ['user', 'index', 'user'];
+var controllers = ['user', 'index', 'file'];
 controllers.forEach(function (v) {
 	var controller = require('./controllers/' + v);
 	controller.routes.forEach(function (route) {
