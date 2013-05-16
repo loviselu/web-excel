@@ -1,0 +1,41 @@
+doctype 5
+html
+    head
+        title=title
+        link(rel='stylesheet', href='/stylesheets/login.css')
+    body
+        .co_header
+            .content
+                .title #{title}
+        .lo_main
+            .content.fix
+                .main_left
+                    p.p1
+                        | 支持共享和协同功能的
+                        br
+                        span.s1 在 线
+                        | 表格编辑器
+                    p.p2
+                        | 创建并在网络上共享交互电子表格
+                        br
+                        | 直接通过互联网，就可以将您的电子表格共享给远处的朋
+                        br
+                        | 友或客户，无须打印、无须电子邮件附件！
+                .main_center
+                .main_right
+                    .title 登陆
+                    form(method='POST',action='/user/login')
+                        input.textbox(name='email',type='text',placeholder='输入注册邮箱')
+                        input.textbox(name='password',type='password',placeholder='请输入密码')
+                        .wrap
+                            input#checkbox1(type='checkbox')
+                            label.mr5(for='checkbox1')  记住密码
+                            input#checkbox2(type='checkbox')
+                            label.mr5(for='checkbox2')  安全登陆
+                        button.loginBtn(type='submit')
+                        p.p1
+                            | 你还没有帐号?
+                            br
+                            a(href='/user/register') 免费注册
+        .lo_intro
+        .lo_footer

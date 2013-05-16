@@ -1,0 +1,28 @@
+doctype 5
+html
+    head
+        title=title
+        link(rel='stylesheet', href='/stylesheets/login.css')
+    body
+        .co_header
+            .content
+                .title #{title}
+        .re_main
+            .content
+                .title
+                    span.s1 欢迎注册#{title} ：
+                    span.s2  --- 30秒钟轻松注册，即可使用令人意想不到的功能
+                form(method='post',action='/user/register')
+                    .line
+                        label 用户名：
+                        input.input1(type='text',name='username')
+                    .line
+                        label 邮箱：
+                        input.input1(type='text',name='email')
+                    .line
+                        label 密码：
+                        input.input1(type='text',name='password')
+                    .line
+                        label 确认密码：
+                        input.input1(type='text',name='password2')
+                    button.register_btn(type='submit')
