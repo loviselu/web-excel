@@ -14,6 +14,9 @@ var http = require('http'),
 app.use('/excel-editor', express.static(__dirname + '/excel-editor'));
 app.use('/themes', express.static(__dirname + '/excel-editor/themes'));
 
+app.use(express.bodyParser());
+app.use(express.methodOverride());
+
 app.get(/^(\/|\/index\.html)$/, function (req, res) {
 	fs.readFile('excel-editor/index.html', 'utf-8', function(err, data){
 		if (err) {
@@ -24,7 +27,7 @@ app.get(/^(\/|\/index\.html)$/, function (req, res) {
 		}
 	});
 });
-
+/*
 app.get('/:doc', function (req, res) {
 	db.get(req.params.doc, function (err, data) {
 		if (err) {
@@ -43,8 +46,33 @@ app.get('/:doc', function (req, res) {
 			res.redirect(301, '/');
 		}
 	});
+});*/
+/*把上面两个get注释掉才有用哦~不懂
+app.get('/nima.xlsx', function (req, res) {
+	fs.readFile('test.xlsx', function(err, data){
+		if (err) {
+			console.error('error!');
+			res.end('error');
+		} else {
+			res.setHeader("Content-Type", "application/vnd.ms-excel");
+			res.end(data);
+		}
+	});
 });
-
+*/
+app.post('/exportXlsx',function(req,res){
+	console.log(req.body.data);
+	fs.readFile('test.xlsx', function(err, data){
+		if (err) {
+			console.error('error!');
+			res.end('error');
+		} else {
+			console.log('return data');
+			res.setHeader("Content-Type", "application/vnd.ms-excel");
+			res.send('data');
+		}
+	});
+});
 // app.post('/register', function (req, res) {
 // 	if (req.body.psd2 != req.body.psd) {
 // 		return res.send({'code' : -1, message : '两次输入密码不一致'});
