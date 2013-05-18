@@ -12,7 +12,7 @@ exports.routes = [
 
 //显示文件
 exports.showFileById = function (req, res) {
-	db.get(req.params.doc, function (err, data) {
+	db.get(req.session.userId,req.params.doc, function (err, data) {
 		if (err) {
 			console.log(err.message);
 			res.redirect(301, '/');
@@ -22,7 +22,7 @@ exports.showFileById = function (req, res) {
 					console.error(err.message);
 					res.end('error');
 				} else {
-					res.set('Content-Type', 'text/plain');
+					res.set('Content-Type', 'text/html');
 					res.end(data);
 				}
 			});
