@@ -1,5 +1,5 @@
 var fs = require('fs'),
-	db = require('../models/dataProducer'),
+	fileModel = require('../models/file'),
 	undefined;
 
 exports.routes = [
@@ -12,7 +12,7 @@ exports.routes = [
 
 //显示文件
 exports.showFileById = function (req, res) {
-	db.get(req.session.userId,req.params.doc, function (err, data) {
+	fileModel.get(req.session.userId,req.params.doc, function (err, data) {
 		if (err) {
 			console.log(err.message);
 			res.redirect(301, '/');
@@ -52,5 +52,22 @@ exports.showFileById = function (req, res) {
  *   }
  */
 exports.list = function(req,res){
-
+	fileModel.get(req.session.userId,req.params.doc, function (err, data) {
+		if (err) {
+			console.log(err.message);
+			res.redirect(301, '/');
+		} else if (data != null) {
+			fs.readFile('excel-editor/index.html', 'utf-8', function (err, data) {
+				if (err) {
+					console.error(err.message);
+					res.end('error');
+				} else {
+					res.set('Content-Type', 'text/html');
+					res.end(data);
+				}
+			});
+		} else {
+			res.redirect(301, '/');
+		}
+	});
 }

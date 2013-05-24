@@ -1,4 +1,4 @@
-var dp = require('../models/dataProducer');
+var dp = require('../models/file');
 
 dp.create('gfhfgh',{title: 'haha'}, function (err, id) {
 	console.log(id);
