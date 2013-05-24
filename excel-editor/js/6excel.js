@@ -479,9 +479,9 @@ function toBoolFromString(val){
 function JsonHandler(){
   var self=this;
   //chenjiabin，返回导出表格用于存与后台数据库的json，sheet参数即为Sheet类型的变量
-  self.exportSheet=function(sheet){
+  self.exportSheet=function(id,name,sheet){
 	var formula=null;
-    var json="{\"sheetId\":null,\"sheetName\":\"\",\"cells\":{";
+    var json='{"sheetId":"'+id+'","sheetName":"'+name+'","cells":{';
     var cells="";
 	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
@@ -834,6 +834,7 @@ function trim(str,charlist){
   }
   return whitespace.indexOf(str.charAt(0))===-1?str:"";
 }
+//
 function CommHandler(configs){
   var self=this;
   self.configs={url:"index.php",method:"POST"};
@@ -931,9 +932,7 @@ function saveBookConfirm(){
   function showResultText(btn,text){
     if(btn=="ok"){
       if(valid_name.test(text)){
-        if(text.substring(text.length-4)!=".gel"){
-          text+=".gel";
-        }
+		
         window.saveBook(text);
       }else {
         Ext.MessageBox.prompt("另存为..","请输入文件名：",showResultText);
@@ -1413,7 +1412,7 @@ function addApplicationAPI(self){
     self.model.refresh();
   };
   self.loadBook=function(bookId){
-    self.CommManager.loadBook(bookId,self.bookLoaded);
+    //self.CommManager.loadBook(bookId,self.bookLoaded);
   };
   self.setBookName=function(bookName){
     self.activeBook.setName(bookName);
@@ -1422,26 +1421,30 @@ function addApplicationAPI(self){
   self.saveBook=function(bookName){
     var bookId="null";
     if(bookName==undefined){
-      if(window.ogID){
-        bookName=self.activeBook.getName();
+      if(self.activeSheet.name){
+        bookName=self.activeSheet.name;
       }else {
         saveBookConfirm();
         return ;
       }
       var id=self.activeBook.getId();
-    }else {
-      window.ogID=null;
-    }
+	  if(self.activeSheet.id){
+		var id=self.activeSheet.id;
+	  }else{
+		var id='';
+	  }
+    }else {}
     if(bookName==undefined){
-      bookName=self.activeBook.getName();
+      bookName=self.activeSheet.name;
     }
-    self.setBookName(bookName);
-    var json=JsonManager.exportBook(id,self.activeBook,self.activeSheet);
-    self.CommManager.sendBook(json,"json");
+    self.activeSheet.name=bookName;
+    var json=JsonManager.exportSheet(id,bookName,self.activeSheet);
+	
+    //self.CommManager.sendBook(json,"json");
   };
   self.exportBook=function(format){
     var json=JsonManager.exportBook(self.activeBook.getId(),self.activeBook,self.activeSheet);
-    self.CommManager.exportBook(json,format);
+    //self.CommManager.exportBook(json,format);
   };
   self.newBook=function(){
     Ext.MessageBox.show({title:lang("New_Book_Dialog_Title"),msg:lang("New_Book_Dialog_Text")+"<br>"+lang("Do_you_want_to_continue"),buttons:Ext.Msg.YESNOCANCEL,icon:Ext.MessageBox.OK,fn:function(btn){
