@@ -2,7 +2,12 @@ var fs = require('fs');
 
 exports.routes = [
 	{
-		'pattern': [/^(\/|\/index\.html)$/,'/doc/:doc'],
+		'pattern': /^(\/|\/index\.html)$/,
+		'method': 'get',
+		'handler': 'index'
+	},
+	{
+		'pattern': ['/doc/:doc'],
 		'method': 'get',
 		'handler': 'index'
 	}
@@ -21,5 +26,4 @@ exports.index = function (req, res) {
 	}else{
 		res.redirect('/user/login')
 	}
-
 };
