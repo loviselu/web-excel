@@ -119,3 +119,4 @@ exports.register = function(req,res){
 		res.end('请完整填写注册资料');
 	}
 }
+
