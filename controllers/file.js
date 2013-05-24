@@ -8,7 +8,7 @@ var fs = require('fs'),
 exports.routes = [
 	{
 		'pattern': '/file/newFile',
-		'mothod' : 'post',
+		'method' : 'post',
 		'handler' : 'newFile'
 	},
 	{
@@ -39,11 +39,6 @@ exports.routes = [
 	{
 		'pattern': '/file/remove',
 		'method': 'post',
-		'handler': 'getFileList'
-	},
-	{
-		'pattern': '/file/getFileList',
-		'method': 'get',
 		'handler': 'getFileList'
 	}
 ];
