@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html >
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>
@@ -55,8 +55,7 @@
                 dragCopy();
             });
 
-            var online = true;
-            if (online) {
+            if (navigator.onLine) {
                 if (location.pathname.length > 1 && location.pathname !== '/index.html') {
                     //非新文档
                     doc = new collaborate();
@@ -81,7 +80,7 @@
             this.count = null;
 
             //websocket
-            var url = 'ws://' + location.hostname + ':8080' + location.pathname,
+            var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\//g,''),
                 socket = new WebSocket(url);
             
             socket.onmessage = function (message) {
@@ -103,7 +102,10 @@
                             me.count = mes.data.count;
                             document.getElementById('chatCount').innerText = me.count;
                             break;
-                        case 1 : 
+						case 4:
+                            //编辑状态更新
+                            break;
+                        case 1 :
                             //文档操作
                             if (mes.data instanceof Object) {
                                 //文档被更新,可直接合并
@@ -133,12 +135,12 @@
 
             socket.onerror = function (e){
                 console.log(e);
-            }
+            };
 
             //send sth.
             this.send = function (data) {
                 socket.send(JSON.stringify(data));
-            }
+            };
 
             //聊天工具
             var chat = {
@@ -182,14 +184,14 @@
                         me.send({
                             "code" : 0,
                             "data" : {
-                                'content' : message
+                                'content' : encodeURIComponent(message)
                             }
                         });
                     }
                 },
                 recieve : function (message) {
                     if (message != undefined) {
-                        this.createMes(message.content, message.user);
+                        this.createMes(decodeURIComponent(message.content), message.user);
                     }
                 },
                 createMes : function (mes, user) {
@@ -200,7 +202,7 @@
                     chatList.appendChild(newChat);
                     chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
                 }
-            }
+            };
             chat.init();
         }
         </script>

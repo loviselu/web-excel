@@ -11,6 +11,10 @@ var http = require('http'),
 	wss = new ws({port: 8080}), 
 	connections = {};
 
+app.use(function (req, res, next) {
+   console.log(req.url);
+   next();
+});
 app.use('/excel-editor', express.static(__dirname + '/excel-editor'));
 app.use('/themes', express.static(__dirname + '/excel-editor/themes'));
 
@@ -121,7 +125,7 @@ wss.on('connection', function(socket) {
         	message = JSON.parse(message);
         } catch (e) {
         	console.log(e);
-	    	return socket.send('{"code" : -3, error : "参数错误"}');
+	    	socket.send('{"code" : -3, error : "参数错误"}');
         }
     	if (message.type !== undefined && message.type == 1) {
 	        db.update(docID, message.data, function (err, data) {
@@ -183,8 +187,6 @@ function broadcast (socket, doc, message) {
 	for (var i = 0; i < doc.socketList.length; i++) {
     	if (doc.socketList[i] && doc.socketList[i] !== socket) {
     		doc.socketList[i].send(message);
-    	} else {
-    		continue;
     	}
     }
 }
