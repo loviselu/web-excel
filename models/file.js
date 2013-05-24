@@ -9,16 +9,25 @@ var ObjectID = require('mongodb').ObjectID;
  */
 exports.create = function (userId, data, callback) {
 	database.ready(function(db){
-		db.collection('document', function (err, collection) {
+		db.collection('document', function (err, document) {
 			data['data'] = data['data'] || {};
 			data['owner'] =  userId;
-			collection.insert(data, {w: 1}, function (err, result) {
+			document.insert(data, {w: 1}, function (err, result) {
 				if (err) {
 					console.error(err.message);
 					return callback(err);
 				}
-				return callback(null, result[0]._id.toString());
-			})
+				var fileId =  result[0]._id.toString();
+				db.collection('user', function (err, user) {
+					user.update({_id:ObjectID(userId)}, {$push:{my_files:fileId}}, function (err, result) {
+						if (err) {
+							console.error(err.message);
+							return callback(err);
+						}
+						return callback(null,fileId);
+					});
+				});
+			});
 		})
 	})
 };
@@ -115,3 +124,5 @@ exports.update = function (userId, fileId, data, callback) {
 		})
 	})
 }
+
+

@@ -2,7 +2,7 @@ var fs = require('fs');
 
 exports.routes = [
 	{
-		'pattern': /^(\/|\/index\.html)$/,
+		'pattern': [/^(\/|\/index\.html)$/,'/doc/:doc'],
 		'method': 'get',
 		'handler': 'index'
 	}
