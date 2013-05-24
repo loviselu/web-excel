@@ -1,5 +1,4 @@
-var CONFIG = require('../config');
-var MongoClient = require('mongodb').MongoClient;
+var database = require('../util/database');
 var ObjectID = require('mongodb').ObjectID;
 
 /**
@@ -9,13 +8,10 @@ var ObjectID = require('mongodb').ObjectID;
  * @param callback 参数分别为(err, id)
  */
 exports.create = function (userId, data, callback) {
-	MongoClient.connect(CONFIG.DBPATH, function (err, db) {
-		if (err) {
-			console.error(err.message);
-			return callback(err);
-		}
+	database.ready(function(db){
 		db.collection('document', function (err, collection) {
 			data['data'] = data['data'] || {};
+			data['owner'] =  userId;
 			collection.insert(data, {w: 1}, function (err, result) {
 				if (err) {
 					console.error(err.message);
@@ -24,7 +20,7 @@ exports.create = function (userId, data, callback) {
 				return callback(null, result[0]._id.toString());
 			})
 		})
-	});
+	})
 };
 
 /**
@@ -34,11 +30,7 @@ exports.create = function (userId, data, callback) {
  * @param callback  参数分别为(err, data)
  */
 exports.get = function (userId, fileId, callback) {
-	MongoClient.connect(CONFIG.DBPATH, function (err, db) {
-		if (err) {
-			console.error(err.message);
-			return callback(err);
-		}
+	database.ready(function(db) {
 		db.collection('document', function (err, collection) {
 			if (typeof fileId === 'string' && fileId.length === 24) {
 				collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
@@ -46,6 +38,7 @@ exports.get = function (userId, fileId, callback) {
 						console.error(err.message);
 						return callback(err);
 					}
+					//todo 添加权限管理
 					return callback(null, result);
 				});
 
@@ -79,11 +72,7 @@ exports.get = function (userId, fileId, callback) {
  * @param callback 参数分别为(err, result)
  */
 exports.update = function (userId, fileId, data, callback) {
-	MongoClient.connect(CONFIG.DBPATH, function (err, db) {
-		if (err) {
-			console.error(err.message);
-			return callback(err);
-		}
+	database.ready(function (db) {
 		db.collection('document', function (err, collection) {
 			collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 				if (err) {
@@ -93,6 +82,8 @@ exports.update = function (userId, fileId, data, callback) {
 				if (!result) {
 					return callback(new Error("Document not found!"));
 				}
+				//todo 检测是否有权限
+
 				//检查是否有冲突
 				var conflict = [];
 				var newData = {};

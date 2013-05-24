@@ -2,10 +2,10 @@
  * 用户模块
  */
 
-var CONFIG = require('../config');
-var MongoClient = require('mongodb').MongoClient;
-var ObjectID = require('mongodb').ObjectID;
-var crypto = require('crypto');
+var database = require('../util/database'),
+	ObjectID = require('mongodb').ObjectID,
+	crypto = require('crypto');
+
 function md5 (text) {
 	return crypto.createHash('md5').update(text).digest('hex');
 };
@@ -33,6 +33,7 @@ exports.routes = [
 	}
 ];
 
+
 /**
  * 显示登陆页
  * @param req
@@ -49,11 +50,7 @@ exports.index = function (req, res) {
  */
 exports.login = function (req, res){
 	if(req.body.email && req.body.password){
-		MongoClient.connect(CONFIG.DBPATH, function (err, db) {
-			if (err) {
-				console.error(err.message);
-				res.end('数据库错误，请重试');
-			}
+		database.ready( function ( db) {
 			db.collection('user', function (err, collection) {
 				collection.findOne({email:req.body.email}, function (err, item) {
 					if (err) {
@@ -92,11 +89,7 @@ exports.showRegister = function(req,res){
  */
 exports.register = function(req,res){
 	if(req.body.email && req.body.password && req.body.username){
-		MongoClient.connect(CONFIG.DBPATH, function (err, db) {
-			if (err) {
-				console.error(err.message);
-				return callback(err);
-			}
+		database.ready(function (db) {
 			db.collection('user', function (err, collection) {
 				collection.findOne({email:req.body.email}, function (err, item) {
 					if (err) {
@@ -110,7 +103,7 @@ exports.register = function(req,res){
 							email:req.body.email,
 							username:req.body.username,
 							password:md5(req.body.password)
-						},{w:1},function(err,result){
+						},function(err,result){
 							collection.findOne({email:req.body.email}, function (err, item){
 								req.session.userId = item._id;
 								req.session.username = item.username;
