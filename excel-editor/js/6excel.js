@@ -479,9 +479,9 @@ function toBoolFromString(val){
 function JsonHandler(){
   var self=this;
   //chenjiabin，返回导出表格用于存与后台数据库的json，sheet参数即为Sheet类型的变量
-  self.exportSheet=function(id,name,sheet){
+  self.exportSheet=function(name,sheet){
 	var formula=null;
-    var json='{"sheetId":"'+id+'","sheetName":"'+name+'","cells":{';
+    var json='{"fileName":"'+name+'","cells":{';
     var cells="";
 	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
@@ -871,26 +871,29 @@ function CommHandler(configs){
   self.requestFailed=function(response){
     Ext.MessageBox.show({title:"通信故障",msg:"无返回数据。",buttons:Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
   };
-  self.sendRequest=function(parameters,successFn,failureFn){
-    Ext.Ajax.request({method:self.configs.method,waitMsg:"请稍候...",url:self.configs.url,success:function(response,param){
-        self.recieveRequest(response,param,successFn,failureFn);
-      },failure:self.requestFailed,params:parameters});
+  self.sendRequest=function(parameters,url,successFn,failureFn){
+    Ext.Ajax.request({method:"post",waitMsg:"请稍候...",url:url,success:function(response,param){
+        alert("保存成功");
+		//self.recieveRequest(response,param,successFn,failureFn);
+      },failure:function(){}});
   };
   //发起请求loadbook
   self.loadBook=function(bookId,callback){
     self.sendRequest({c:"Spreadsheet",m:"loadBook",param1:bookId,ogId:window.ogID||0,ogWid:window.ogWID||0},callback);
   };
   self.bookSaveServerResponse=function(data){
+  alert("成功新建保存");/* 
     application.activeBook.setId(data.BookId);
     bookId=application.activeBook.getId();
     parent.og.openLink(parent.og.getUrl("files","save_spreadsheet",{id:window.ogID||0,book:bookId,name:application.activeBook.getName()}),{onSuccess:function(data){
         window.ogID=data.sprdID;
       },onError:function(data){
         deleteBook(bookId);
-      }});
+      }}); */
   };
-  self.sendBook=function(data,format){
-    var params={c:"Spreadsheet",m:"saveBook",param1:data,param2:"json",param3:"json",ogId:window.ogID||0,ogWid:window.ogWID||0};
+  //chenjiabin
+  self.sendBook=function(data){
+    var params={createData:data};
     self.sendRequest(params,self.bookSaveServerResponse);
   };
   self.exportBook=function(data,format){
@@ -994,8 +997,8 @@ function createToolbars(application){
     tb.add({icon:iconspath+"new-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("新建")+"..</b><br/>"+lang("新建表格"),handler:function(){
         application.newBook();
       }},"-");
-    tb.add({icon:iconspath+"refresh-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("刷新表格")+"..</b><br/>"+lang("刷新表格"),handler:function(){
-        application.refresh();
+    tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
+        
       }},"-");
     
     //导入导出需要服务器支持
@@ -1079,18 +1082,9 @@ function createToolbars(application){
             window.FormulaBar.setValue("=Min(");
             window.FormulaBar.focus();
           }},"-",{hideLabel:true,text:lang("更多函数"),handler:formulaWizard}]})});
-    tb.add({disabled:false,icon:iconspath+"range2.png",cls:"x-btn-icon",tooltip:"<i>"+lang("选区")+"</i>",handler:function(){
-        namesDialog();
-      }});
     tb.add({disabled:false,icon:iconspath+"show-formula.png",cls:"x-btn-icon",tooltip:"<i>"+lang("查看函数")+"</i>",handler:function(){
         application.switchViewMode(!this.pressed);
         this.toggle(!this.pressed);
-      }});
-    tb.add({disabled:false,icon:iconspath+"decimal-increase.png",cls:"x-btn-icon",tooltip:"<i>"+lang("增加精度")+"</i>",handler:function(){
-        application.increaseDecimals();
-      }});
-    tb.add({disabled:false,icon:iconspath+"decimal-decrease.png",cls:"x-btn-icon",tooltip:"<i>"+lang("减少精度")+"</i>",handler:function(){
-        application.decreaseDecimals();
       }});
     var tb2=new Ext.Toolbar();
     tb2.render("north");
@@ -1438,9 +1432,9 @@ function addApplicationAPI(self){
       bookName=self.activeSheet.name;
     }
     self.activeSheet.name=bookName;
-    var json=JsonManager.exportSheet(id,bookName,self.activeSheet);
+    var json=JsonManager.exportSheet(bookName,self.activeSheet);
 	
-    //self.CommManager.sendBook(json,"json");
+    self.CommManager.sendBook(json);
   };
   self.exportBook=function(format){
     var json=JsonManager.exportBook(self.activeBook.getId(),self.activeBook,self.activeSheet);
