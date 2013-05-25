@@ -45,20 +45,20 @@ $(function(){
 	fileLayout_tmpl += "<\/div>";
 
 	//-------------------------myfiles_item_tmpl---------------------------------------
-	myfiles_item_tmpl += "<div class=\"item\" data-fileId=\"<%=file.id%>\">";
-	myfiles_item_tmpl += "    <span class=\"fileName\"><%=file.name%><\/span>";
+	myfiles_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
+	myfiles_item_tmpl += "    <span class=\"fileName\"><%=name%><\/span>";
 	myfiles_item_tmpl += "    <span class=\"fi_icon_command\"><\/span>";
 	myfiles_item_tmpl += "<\/div>";
 
 	//-------------------------share_to_me_item_tmpl---------------------------------------
-	share_to_me_item_tmpl += "<div class=\"item\" data-fileId=\"<%=file.id%>\">";
-	share_to_me_item_tmpl += "    <span class=\"fileName\"><%=file.name%><\/span>";
+	share_to_me_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
+	share_to_me_item_tmpl += "    <span class=\"fileName\"><%=name%><\/span>";
 	share_to_me_item_tmpl += "    <span class=\"fi_icon_delete\" title=\"删除显示\"><\/span>";
 	share_to_me_item_tmpl += "<\/div>";
 
 	//-------------------------recyclebin_item_tmpl---------------------------------------
-	recyclebin_item_tmpl += "<div class=\"item\" data-fileId=\"<%=file.id%>\">";
-	recyclebin_item_tmpl += "    <span class=\"fileName\"><%=file.name%><\/span>";
+	recyclebin_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
+	recyclebin_item_tmpl += "    <span class=\"fileName\"><%=name%><\/span>";
 	recyclebin_item_tmpl += "    <span class=\"fi_icon_revert\" title=\"恢复文件\"><\/span>";
 	recyclebin_item_tmpl += "    <span class=\"fi_icon_delete\" title=\"彻底删除文件\"><\/span>";
 	recyclebin_item_tmpl += "<\/div>";
@@ -181,8 +181,8 @@ $(function(){
 			$('#fileBoard .my_files .message').text('暂无文件');
 		}else{
 			$('#fileBoard .my_files .message').hide();
-			for(var i = my_files.length;i>=0;i--){
-				$('#fileBoard .my_files').append(share_to_me_item_tmpl_func(my_files[i]));
+			for(var i = my_files.length-1;i>=0;i--){
+				$('#fileBoard .my_files').append(my_files_item_tmpl_func({id:my_files[i]._id,name:my_files[i].filename}));
 			}
 		}
 
@@ -191,8 +191,9 @@ $(function(){
 			$('#fileBoard .share_to_me .message').text('暂无文件');
 		}else{
 			$('#fileBoard .share_to_me .message').hide();
-			for(var i = share_to_me.length;i>=0;i--){
-				$('#fileBoard .share_to_me').append(my_files_item_tmpl_func(share_to_me[i]));
+			for(var i = share_to_me.length-1;i>=0;i--){
+				console.log(share_to_me[i]);
+				$('#fileBoard .share_to_me').append(share_to_me_item_tmpl_func({id:share_to_me[i]['_id'],name:share_to_me[i]['filename']}));
 			}
 		}
 
@@ -201,8 +202,8 @@ $(function(){
 			$('#fileBoard .recyclebin .message').text('暂无文件');
 		}else{
 			$('#fileBoard .recyclebin .message').hide();
-			for(var i = recyclebin.length;i>=0;i--){
-				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func(recyclebin[i]));
+			for(var i = recyclebin.length-1;i>=0;i--){
+				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:recyclebin[i]._id,name:recyclebin[i].filename}));
 			}
 		}
 	})

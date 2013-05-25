@@ -108,29 +108,29 @@ exports.getFileList = function(req,res){
 			}
 			user.findOne({_id:ObjectID(req.session.userId)},{my_files:true,share_to_me:true},function(err,result){
 
-				var my_files = result.my_files || [];
-				var share_to_me = result.share_to_me || [];
+				var my_files = [];
+				var share_to_me = [];
 				var recyclebin = [];
-				var all_file = Array.prototype.concat(my_files,my_files).map(function(v){return ObjectId(v)});
+				var all_file = Array.prototype.concat(result.my_files || [],result.share_to_me || []).map(function(v){return ObjectID(v)});
 
 				db.collection('file', function (err, file) {
 					if(err){
 						res.json({code:-1,message:"数据库出错"});
 						return;
 					}
-					file.find({_id:{"$in":all_file}},{filename:1,owner:1},function(err,result){
+					file.find({_id:{"$in":all_file}},{filename:1,owner:1}).toArray(function(err,result){
 						if(err){
 							res.json({code:-1,message:"数据库出错"});
 							return;
 						}
-						for(var i = result.length;i>=0;i--){
-							if(result[i].owner === req.seesion.userId){
+
+						for(var i = result.length-1;i>=0;i--){
+							if(result[i].owner && result[i].owner === req.seesion.userId){
 								if(result[i].in_recyclebin){
 									recyclebin.push(result[i]);
 								}else{
 									my_files.push(result[i]);
 								}
-
 							}else{
 								share_to_me.push(result[i]);
 							}
