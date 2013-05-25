@@ -872,29 +872,21 @@ function CommHandler(configs){
     Ext.MessageBox.show({title:"通信故障",msg:"无返回数据。",buttons:Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
   };
   self.sendRequest=function(parameters,url,successFn,failureFn){
-    Ext.Ajax.request({method:"post",waitMsg:"请稍候...",url:url,success:function(response,param){
-        alert("保存成功");
-		//self.recieveRequest(response,param,successFn,failureFn);
-      },failure:function(){}});
+    Ext.Ajax.request({method:"post",waitMsg:"请稍候...",url:url,success:successFn,failure:failureFn});
   };
   //发起请求loadbook
   self.loadBook=function(bookId,callback){
     self.sendRequest({c:"Spreadsheet",m:"loadBook",param1:bookId,ogId:window.ogID||0,ogWid:window.ogWID||0},callback);
   };
   self.bookSaveServerResponse=function(data){
-  alert("成功新建保存");/* 
-    application.activeBook.setId(data.BookId);
-    bookId=application.activeBook.getId();
-    parent.og.openLink(parent.og.getUrl("files","save_spreadsheet",{id:window.ogID||0,book:bookId,name:application.activeBook.getName()}),{onSuccess:function(data){
-        window.ogID=data.sprdID;
-      },onError:function(data){
-        deleteBook(bookId);
-      }}); */
+	var res=JSON.parse(data.responseText);
+	application.activeSheet.id = res.data.fileId;
+	alert("成功将新建表格保存至服务器~~");
   };
   //chenjiabin
   self.sendBook=function(data){
-    var params={createData:data};
-    self.sendRequest(params,self.bookSaveServerResponse);
+    var params={saveData:data};
+    self.sendRequest(params,"/file/newFile",self.bookSaveServerResponse,function(){alert("保存失败");});
   };
   self.exportBook=function(data,format){
     if(window.submitForm!=undefined){
@@ -979,6 +971,9 @@ function createToolbars(application){
     tb.add("-",{icon:iconspath+"saveas-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("保存")+"</b><br/>"+lang("保存到服务器"),handler:function(){
         application.saveBook();
       }});
+	tb.add({icon:iconspath+"new-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("新建")+"..</b><br/>"+lang("新建表格"),handler:function(){
+	window.open("http://localhost:3000/", "_blank");
+	}},"-");
 	  //chenjiabin，这里用到的ajax忽略IE7以下
     tb.add({icon:iconspath+"pencil-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导出为excel文件")+"..</b><br/>"+lang("导出为excel文件"),handler:function(){
         //saveBookConfirm();
@@ -994,9 +989,7 @@ function createToolbars(application){
 			alert('unsuccess');
 		}
       }});
-    tb.add({icon:iconspath+"new-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("新建")+"..</b><br/>"+lang("新建表格"),handler:function(){
-        application.newBook();
-      }},"-");
+    
     tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
         
       }},"-");
@@ -1317,6 +1310,11 @@ function Application(container){
   addApplicationAPI(self);
   self.construct(container);
   window.application=self;
+  var url = window.location.href;
+  var paramArray = url.split('3000/');
+  if(paramArray[1].length!=0){
+	
+  }
   return self;
 }
 
@@ -1413,7 +1411,10 @@ function addApplicationAPI(self){
     document.title=self.configs.application.titlePrefix+" - "+bookName;
   };
   self.saveBook=function(bookName){
-    var bookId="null";
+	if(self.activeSheet.id){
+		alert("表格已经保存了哦~");
+		return ;
+	}
     if(bookName==undefined){
       if(self.activeSheet.name){
         bookName=self.activeSheet.name;
@@ -1421,19 +1422,12 @@ function addApplicationAPI(self){
         saveBookConfirm();
         return ;
       }
-      var id=self.activeBook.getId();
-	  if(self.activeSheet.id){
-		var id=self.activeSheet.id;
-	  }else{
-		var id='';
-	  }
     }else {}
     if(bookName==undefined){
       bookName=self.activeSheet.name;
     }
     self.activeSheet.name=bookName;
     var json=JsonManager.exportSheet(bookName,self.activeSheet);
-	
     self.CommManager.sendBook(json);
   };
   self.exportBook=function(format){
