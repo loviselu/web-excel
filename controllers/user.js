@@ -60,6 +60,8 @@ exports.login = function (req, res){
 					if(item && md5(req.body.password) === item.password){
 						req.session.userId = item._id;
 						req.session.username = item.username;
+						res.cookie('userId',item._id);
+						res.cookie('username',item.username);
 						res.redirect('/');
 					}else{
 						res.end('帐号或密码错误');
@@ -107,6 +109,8 @@ exports.register = function(req,res){
 							collection.findOne({email:req.body.email}, function (err, item){
 								req.session.userId = item._id;
 								req.session.username = item.username;
+								res.cookie('userId',item._id);
+								res.cookie('username',item.username)
 								res.redirect('/');
 							})
 						})

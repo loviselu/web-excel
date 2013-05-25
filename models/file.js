@@ -48,6 +48,7 @@ exports.get = function (userId, fileId, callback) {
 						return callback(err);
 					}
 					//todo 添加权限管理
+					if(result.owner !== userId && typeof result.readable_list === 'array' && result.readable_list )
 					return callback(null, result);
 				});
 
