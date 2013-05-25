@@ -89,6 +89,7 @@
 #fileBoard .item .fileName {
 	font-size: 14px;
 	cursor: pointer;
+	text-decoration: none;
 }
 #fileBoard .item .fileName:hover {
 	text-decoration: underline;
