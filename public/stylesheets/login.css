@@ -1,0 +1,238 @@
+/* Reset CSS */
+body {
+	line-height: 1.4;
+	background: white;
+}
+
+body, input, textarea, select {
+	font-size: 12px;
+	color: #333;
+	font-family: '微软雅黑', Tahoma;
+}
+
+body, h1, h3, h4, p, ul, ol {
+	margin: 0;
+}
+
+ul, ol {
+	padding-left: 0;
+	list-style-type: none;
+}
+
+a img {
+	border: 0;
+}
+
+/* Lib CSS */
+.fix {
+	*zoom: 1;
+}
+
+.fix:after, .fix:before {
+	display: block;
+	content: "clear";
+	height: 0;
+	clear: both;
+	overflow: hidden;
+	visibility: hidden;
+}
+
+.elli {
+	display: block;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	width: 100%;
+}
+
+.none {
+	display: none;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.ml5 {
+	margin-left: 5px;
+}
+
+.mr5 {
+	margin-right: 5px;
+}
+
+.co_header {
+	border-bottom: 1px solid #dbdbdb;
+
+}
+.co_header .content{
+	width: 1000px;
+	margin: 0 auto;
+	height: 100px;
+}
+
+.co_header .content .title {
+	font-size: 30px;
+	padding-top: 25px;
+}
+
+.lo_main {
+	border-bottom: 1px solid #dbdbdb;
+	height: 385px;
+}
+
+.lo_main .content {
+	width: 1000px;
+	margin: 0 auto;
+}
+
+.main_left {
+	float: left;
+	width: 300px;
+	margin-top: 83px;
+}
+
+.main_left .p1 {
+	color: #6F6F6F;
+	line-height: 62px;
+	font-weight: bold;
+	font-size: 30px;
+}
+
+.main_left .p2 {
+	color: #999;
+	line-height: 24px;
+	padding-top: 10px;
+}
+
+.main_left .s1 {
+	color: white;
+	padding-right: 15px;
+	padding-left: 15px;
+	height: 63px;
+	width: 142px;
+	background-color: #BA0B0B;
+	line-height: 63px;
+	font-size: 48px;
+}
+
+.main_center {
+	float: left;
+	width: 300px;
+	height: 266px;
+	background-image: url(../images/Excel.jpg);
+	margin-top: 65px;
+}
+
+.main_right {
+	float: right;
+	width: 317px;
+	padding-top: 59px;
+	padding-right: 15px;
+	position: relative;
+	padding-left: 15px;
+	border-left: 1px solid #dbdbdb;
+	border-right: 1px solid #dbdbdb;
+	padding-bottom: 82px;
+}
+
+.main_right .title {
+	font-size: 20px;
+	font-weight: lighter;
+	padding-bottom: 20px;
+}
+
+.main_right .textbox {
+	display: block;
+	width: 310px;
+	padding-left: 3px;
+	font-size: 14px;
+	line-height: 36px;
+	height: 36px;
+	display: block;
+	margin-bottom: 15px;
+	color: #707070;
+	border: #c7c7c7 1px solid;
+}
+
+.main_right .loginBtn {
+	margin-top: 15px;
+	display: inline-block;
+	width: 158px;
+	height: 47px;
+	background-image: url(../images/btn.jpg);
+	border: none;
+	cursor: pointer;
+}
+
+.main_right .p1 {
+	text-align: right;
+
+	position: absolute;
+	top: 263px;
+	right: 21px;
+}
+
+.re_main .content{
+	width:1000px;
+	margin:0 auto;
+}
+
+.re_main .title{
+    padding-top: 20px;
+
+    padding-bottom: 10px;
+}
+
+.re_main .title .s1{
+    font-size: 22px;
+
+}
+.re_main .title .s2{
+    color:  #979797;
+
+    font-size: 12px;
+}
+.re_main .line{
+    margin-top: 10px;
+
+}
+.re_main .line label{
+    display: inline-block;
+
+    width: 100px;
+    font-size: 14px;
+    text-align: right;
+}
+.re_main .line .input1{
+	width: 310px;
+	padding-left: 3px;
+	font-size: 14px;
+	line-height: 36px;
+	height: 36px;
+	display: inline-block;
+	color: #707070;
+	border: #c7c7c7 1px solid
+}
+
+.re_main .line .input2{
+	width: 150px;
+	padding-left: 3px;
+	font-size: 14px;
+	line-height: 36px;
+	height: 36px;
+	display: inline-block;
+	color: #707070;
+	border: #c7c7c7 1px solid
+}
+
+.register_btn{
+	width: 152px;
+	height: 41px;
+	background-image: url(../images/zc_btn.jpg);
+	margin-left: 100px;
+	margin-top: 15px;
+	cursor: pointer;
+	display: block;
+	border: none;
+}

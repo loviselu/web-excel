@@ -2,9 +2,7 @@
 <html >
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>
-            new excel document
-        </title>
+        <title>new excel document</title>
         <!--[if IE]>
             <style type=text/css media=screen>@import url(./ie.css );</style>
         <![endif]-->
@@ -20,7 +18,9 @@
         <script type="text/javascript" src="/excel-editor/ext-2.2/ext-all.js"></script>
         <script type="text/javascript" src="/excel-editor/js/6excel.js"></script>
         <script type="text/javascript" src="/excel-editor/js/in-min.js"></script>
+	    <script type="text/javascript" src="/javascripts/jquery-1.9.1.js"></script>
         <link rel="stylesheet" type="text/css" href="/excel-editor/js/6excel.css">
+	    <link rel="stylesheet" type="text/css" href="/stylesheets/fileLayout.css">
     </head>
     <body id="body" onload="load();">
         <div id="west"></div>
@@ -205,6 +205,156 @@
             };
             chat.init();
         }
+        </script>
+        <div id="fileLayout">
+	        <div id="fileBoard" style="display: none">
+		        <div class="explorerToggle">
+			        <span class="sbItemExp"></span>
+			        <span>我的文档</span>
+			        <span class="fl_icon_close"></span>
+		        </div>
+		        <div class="explorer">
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_command"></span>
+			        </div>
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_command"></span>
+			        </div>
+		        </div>
+		        <div class="explorerToggle">
+			        <span class="sbItemExp sbItemCol"></span>
+			        <span>共享给我的</span>
+			        <span class="fl_icon_close"></span>
+		        </div>
+		        <div class="explorer" style="display: none">
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_delete" title="删除显示"></span>
+			        </div>
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_delete" title="删除显示"></span>
+				    </div>
+		        </div>
+		        <div class="explorerToggle">
+			        <span class="sbItemExp sbItemCol"></span>
+			        <span>回收站</span>
+			        <span class="fl_icon_close"></span>
+		        </div>
+		        <div class="explorer" style="display: none">
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_revert" title="恢复文件"></span>
+				        <span class="fi_icon_delete" title="彻底删除文件"></span>
+			        </div>
+			        <div class="item">
+				        <span class="fileName">sdgsdg.xls</span>
+				        <span class="fi_icon_revert" title="恢复文件"></span>
+				        <span class="fi_icon_delete" title="彻底删除文件"></span>
+			        </div>
+		        </div>
+	        </div>
+	        <div id="toggleFB">
+		        <div class="sbCol sbExp"></div>
+	        </div>
+	        <div id="command_list" tabIndex="-1">
+		        <div class="item js_rename">重命名</div>
+		        <div class="item js_setAuth">设置权限</div>
+		        <div class="item js_remove">移到回收站</div>
+	        </div>
+        </div>
+        <div class="popupDialog" id="renameDialog" style="display: none">
+	        <div class="head">
+		        <h3>重命名</h3>
+		        <div class="icon-close js_close"></div>
+	        </div>
+	        <div class="body">
+		        <div class="title">
+			        <span>要修改为：</span>
+		        </div>
+		        <input type='text' class="input" name="rename" />
+	            <div class="bottom">
+		            <button class='button'>确定</button>
+		            <button class='button js_close'>取消</button>
+	            </div>
+	        </div>
+        </div>
+        <div class="popupDialog" id="shareDialog" style="display: none">
+	        <div class="head">
+		        <h3>设置文档读写权限</h3>
+		        <div class="icon-close js_close"></div>
+	        </div>
+	        <div class="body">
+		        <div class="title">
+			        <span>只读用户:</span>
+			        <span class="gray">( 所有人可读 <input type='checkbox' /> )</span>
+		        </div>
+		        <textarea class="textarea" name="readable_list" placeholder="输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔..."></textarea>
+		        <div class="title">
+			        <span>可读/写用户:</span>
+			        <span class="gray">( 所有人可读/写 <input type='checkbox' /> )</span>
+		        </div>
+		        <textarea class="textarea" name="writeable_list" placeholder="输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔..."></textarea>
+		        <div class="bottom">
+			        <button class='button'>确定</button>
+			        <button class='button js_close'>取消</button>
+		        </div>
+	        </div>
+        </div>
+        <script>
+	        $(function(){
+		        $('#toggleFB').on('click',function(){
+			       if($('#fileBoard').is(':visible')){
+				       $('#fileBoard').hide();
+				       $('#toggleFB').css('left','0');
+				       $('#toggleFB .sbCol').toggleClass('sbExp');
+
+			       }else{
+				       $('#fileBoard').show();
+				       $('#toggleFB').css('left','212px');
+				       $('#toggleFB .sbCol').toggleClass('sbExp');
+			       }
+		        })
+		        $('#fileBoard .explorerToggle').on('click',function(){
+			        $('#fileBoard .explorer').hide();
+			        $('#fileBoard .explorerToggle .sbItemExp').addClass('sbItemCol');
+			        $(this).next('.explorer').show();
+			        $(this).find('.sbItemExp').removeClass('sbItemCol');
+		        })
+		        $('#fileBoard .explorer').height(($(window).height()-124)+'px');
+		        $(window).on('resize',function(){
+			        $('#fileBoard .explorer').height(($(window).height()-124)+'px');
+		        });
+		        $('#fileBoard .fi_icon_command').on('click',function(){
+			        $('#command_list').css({
+				        top:$(this).position().top + 20 + 'px',
+				        left:$(this).position().left
+			        }).show();
+			        $('#command_list').focus();
+			        $('#command_list').on('blur',function(){
+				        $('#command_list').hide();
+			        })
+		        });
+		        $('#fileLayout .js_setAuth').on('click',function(){
+			        $('#command_list').hide();
+			        $('#shareDialog').css({
+				        top:($(window).height()-$('#shareDialog').height())/2+'px',
+				        left:($(window).width()-$('#shareDialog').width())/2+'px'
+			        }).show();
+		        })
+		        $('#fileLayout .js_rename').on('click',function(){
+			        $('#command_list').hide();
+			        $('#renameDialog').css({
+				        top:($(window).height()-$('#shareDialog').height())/2+'px',
+				        left:($(window).width()-$('#shareDialog').width())/2+'px'
+			        }).show();
+		        })
+		        $('.popupDialog .js_close').on('click',function(){
+			        $('.popupDialog').hide();
+		        })
+	        })
         </script>
     </body>
 </html>
