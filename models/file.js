@@ -15,14 +15,14 @@ exports.create = function (userId, data, callback) {
 			document.insert(data, {w: 1}, function (err, result) {
 				if (err) {
 					console.error(err.message);
-					return callback(err);
+					return callback({code:-1,message:'数据库出错'});
 				}
 				var fileId =  result[0]._id.toString();
 				db.collection('user', function (err, user) {
 					user.update({_id:ObjectID(userId)}, {$push:{my_files:fileId}}, function (err, result) {
 						if (err) {
 							console.error(err.message);
-							return callback(err);
+							return callback({code:-1,message:'数据库出错'});
 						}
 						return callback(null,fileId);
 					});
@@ -44,16 +44,20 @@ exports.get = function (userId, fileId, callback) {
 			if (typeof fileId === 'string' && fileId.length === 24) {
 				collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 					if (err) {
-						console.error(err.message);
-						return callback(err);
+						return callback({code:-1,message:'数据库出错'});
 					}
-					//todo 添加权限管理
-					if(result.owner !== userId && typeof result.readable_list === 'array' && result.readable_list )
-					return callback(null, result);
+					if(!result){
+						return callback({code:-4,message:'指定文档不存在'});
+					}
+					if(result.owner !== userId && result.readable_list && (result.readable_list === 'none' || result.readable_list.indexof(userId) === -1) ){
+						return callback({code:-2,message:'无权限访问'});
+					}else{
+						return callback(null, result);
+					}
 				});
 
 			} else {
-				return callback(new Error('fileId invalid'));
+				return callback({code:-3,message:'文档id不合法'});
 			}
 		});
 	});
@@ -87,13 +91,14 @@ exports.update = function (userId, fileId, data, callback) {
 			collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 				if (err) {
 					console.error(err.message);
-					return callback(err);
+					return callback({code:-1,message:'数据库出错'});
 				}
 				if (!result) {
-					return callback(new Error("Document not found!"));
+					return callback({code:-4,message:'指定文档不存在'});
 				}
-				//todo 检测是否有权限
-
+				if(result.owner !== userId && result.writeable_list && (result.writeable_list === 'none' || result.writeable_list.indexof(userId) === -1) ){
+					return callback({code:-2,message:'无写权限'});
+				}
 				//检查是否有冲突
 				var conflict = [];
 				var newData = {};
@@ -117,7 +122,7 @@ exports.update = function (userId, fileId, data, callback) {
 				collection.update({_id: new ObjectID(id)}, {'data': newData}, {w: 1}, function (err, result) {
 					if (err) {
 						console.error(err.message);
-						return callback(err);
+						return callback({code:-1,message:'数据库出错'});
 					}
 					return callback(null, {"code": 0});
 				})

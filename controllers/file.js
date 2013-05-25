@@ -3,6 +3,7 @@ var fs = require('fs'),
 	database = require('../util/database'),
 	ObjectID = require('mongodb').ObjectID,
 	index = require('./index'),
+	Deferred = require( "JQDeferred"),
 	undefined;
 
 exports.routes = [
@@ -10,6 +11,16 @@ exports.routes = [
 		'pattern': '/file/newFile',
 		'method' : 'post',
 		'handler' : 'newFile'
+	},
+	{
+		'pattern': '/file/getFileDate',
+		'method': 'get',
+		'handler': 'getFileDate'
+	},
+	{
+		'pattern': '/file/getFileList',
+		'method': 'get',
+		'handler': 'getFileList'
 	},
 	{
 		'pattern': '/file/rename',
@@ -35,11 +46,6 @@ exports.routes = [
 		'pattern': '/file/revertRecycle',
 		'method': 'post',
 		'handler': 'revertRecycle'
-	},
-	{
-		'pattern': '/file/remove',
-		'method': 'post',
-		'handler': 'getFileList'
 	}
 ];
 
@@ -95,9 +101,43 @@ exports.getFileDate = function (req, res) {
  */
 exports.getFileList = function(req,res){
 	database.ready(function(db){
-		db.collection('user', function (err, collection) {
-			collection.findOne({_id:ObjectID(req.session.userId)},{my_files:true,share_to_me:true},function(err,result){
-				res.json({'code':0,data:{my_files:result.my_files,share_to_me:result.share_to_me}});
+		db.collection('user', function (err, user) {
+			if(err){
+				res.json({code:-1,message:"数据库出错"});
+				return;
+			}
+			user.findOne({_id:ObjectID(req.session.userId)},{my_files:true,share_to_me:true},function(err,result){
+
+				var my_files = result.my_files || [];
+				var share_to_me = result.share_to_me || [];
+				var recycle = [];
+				var all_file = Array.prototype.concat(my_files,my_files).map(function(v){return ObjectId(v)});
+
+				db.collection('file', function (err, file) {
+					if(err){
+						res.json({code:-1,message:"数据库出错"});
+						return;
+					}
+					file.find({_id:{"$in":all_file}},{filename:1,owner:1},function(err,result){
+						if(err){
+							res.json({code:-1,message:"数据库出错"});
+							return;
+						}
+						for(var i = result.length;i>=0;i--){
+							if(result[i].owner === req.seesion.userId){
+								if(result[i].in_recyclebin){
+									recycle.push(result[i]);
+								}else{
+									my_files.push(result[i]);
+								}
+
+							}else{
+								share_to_me.push(result[i]);
+							}
+						}
+						res.json({'code':0,data:{my_files:my_files,share_to_me:share_to_me,recycle:recycle}});
+					});
+				});
 			})
 		})
 	})
@@ -110,15 +150,34 @@ exports.getFileList = function(req,res){
  */
 exports.rename = function(req,res){
 	var fileID = req.body.fileID;
+	var newName = req.body.newName;
 	if(!fileID && fileID.length !== 24 ){
-		res.json({'code':-1,message:'fileID不合法'});
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
+	if(!newName || newName.length > 30){
+		res.json({'code':-3,message:'文件名不合法'});
 		return;
 	}
 
 	database.ready(function(db){
-		db.collection('file', function (err, collection) {
-			collection.findOne({_id:ObjectID(fileID)},{document:true},function(err,document){
-				res.json({'code':0,data:document});
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{ownerId:true},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.ownerId !== req.session.userId){
+					res.json({'code':-4,message:'无权限修改'});
+				}else{
+					file.update({_id:ObjectID(fileID)},{'$set':{filename:newName}},function(err,result){
+						if(err){
+							res.json({'code':-1,message:'数据库出错'});
+						}else{
+							res.json({'code':0});
+						}
+					})
+				}
 			})
 		})
 	})
@@ -132,7 +191,47 @@ exports.rename = function(req,res){
  *  writeList
  */
 exports.setAuth = function(req,res){
+	var fileID = req.body.fileID,
+		readList =  req.body.readList,
+		allCanRead =  req.body.allCanRead,
+		writeList =  req.body.writeList,
+		allCanWrite =  req.body.allCanWrite,
+		deferAll = Deferred();
 
+
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
+	database.ready(function(db){
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{ownerId:true},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.ownerId !== req.session.userId){
+					res.json({'code':-4,message:'无权限修改'});
+				}else{
+					deferAll.done(function(change){
+						file.update({_id:ObjectID(fileID)},change,function(err,result){
+							if(err){
+								res.json({'code':-1,message:'数据库出错'});
+							}else{
+								res.json({'code':0});
+							}
+						})
+					})
+					if(allCanRead && allCanWrite){
+						deferAll.resolve({'$set':{readable_list:'all',writeable_list:'all'}});
+					}else{
+						//todo 完善权限设置
+						deferAll.resolve({'$set':{readable_list:'all',writeable_list:'all'}});
+					}
+				}
+			})
+		})
+	})
 }
 
 /*
