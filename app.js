@@ -132,16 +132,16 @@ wss.on('connection', function (socket) {
 		console.log(connections);
 	});
 
-	db.get(docID, function (err, data) {
-		if (err) {
-			console.error(err.message);
-			socket.send('{"code" : -4, error : "系统错误"}');
-		} else {
-			console.log(JSON.stringify(data, null, 4));
-			socket.send(JSON.stringify({"code": 2, "data": {"title": data.data.sheetId, "count": doc.length - 1}}));
-			broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1}}));
-		}
-	});
+//	db.get(docID, function (err, data) {
+//		if (err) {
+//			console.error(err.message);
+//			socket.send('{"code" : -4, error : "系统错误"}');
+//		} else {
+//			console.log(JSON.stringify(data, null, 4));
+//			socket.send(JSON.stringify({"code": 2, "data": {"title": data.data.sheetId, "count": doc.length - 1}}));
+//			broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1}}));
+//		}
+//	});
 });
 
 // var options = {
