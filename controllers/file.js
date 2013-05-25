@@ -69,7 +69,7 @@ exports.newFile = function (req, res) {
  * 获取文档数据
  */
 exports.getFileDate = function (req, res) {
-	fileModel.get(req.session.userId,req.query.doc, function (err, data) {
+	fileModel.get(req.session.userId,req.query.fileId, function (err, data) {
 		if (err) {
 			res.json({code:-1,message:'数据库出错'})
 		} else if (data != null) {
@@ -96,7 +96,7 @@ exports.getFileDate = function (req, res) {
  *              fileName:'adsgdgf'
  *          }
  *        ],
- *        "recycle":[]
+ *        "recyclebin":[]
  *   }
  */
 exports.getFileList = function(req,res){
@@ -110,7 +110,7 @@ exports.getFileList = function(req,res){
 
 				var my_files = result.my_files || [];
 				var share_to_me = result.share_to_me || [];
-				var recycle = [];
+				var recyclebin = [];
 				var all_file = Array.prototype.concat(my_files,my_files).map(function(v){return ObjectId(v)});
 
 				db.collection('file', function (err, file) {
@@ -126,7 +126,7 @@ exports.getFileList = function(req,res){
 						for(var i = result.length;i>=0;i--){
 							if(result[i].owner === req.seesion.userId){
 								if(result[i].in_recyclebin){
-									recycle.push(result[i]);
+									recyclebin.push(result[i]);
 								}else{
 									my_files.push(result[i]);
 								}
@@ -135,7 +135,7 @@ exports.getFileList = function(req,res){
 								share_to_me.push(result[i]);
 							}
 						}
-						res.json({'code':0,data:{my_files:my_files,share_to_me:share_to_me,recycle:recycle}});
+						res.json({'code':0,data:{my_files:my_files,share_to_me:share_to_me,recyclebin:recyclebin}});
 					});
 				});
 			})

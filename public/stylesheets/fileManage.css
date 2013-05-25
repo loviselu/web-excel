@@ -93,7 +93,10 @@
 #fileBoard .item .fileName:hover {
 	text-decoration: underline;
 }
-
+#fileBoard .explorer .message {
+	font-size: 12px;
+	margin: 5px;
+}
 #toggleFB .sbCol {
 	background-image: url(../images/main_bg_img.gif);
 	background-position: -51px -50px;
