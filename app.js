@@ -13,7 +13,12 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.locals({
 	title: '三联表格'
-})
+});
+
+app.use(function (req, res, next) {
+	console.log(req.url);
+	next();
+});
 
 app.use('/stylesheets', express.static(__dirname + '/public/stylesheets'));
 app.use('/javascripts', express.static(__dirname + '/public/javascripts'));
@@ -92,56 +97,62 @@ wss.on('connection', function (socket) {
 	 * }
 	 */
 	socket.on('message', function (message) {
-		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + this.id);
+		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + this.userName || this.id);
 		try {
 			message = JSON.parse(message);
 		} catch (e) {
 			console.log(e);
-			return socket.send('{"code" : -3, error : "参数错误"}');
+			socket.send('{"code" : -3, error : "参数错误"}');
 		}
-		if (message.type !== undefined && message.type == 1) {
-			db.update(docID, message.data, function (err, data) {
-				if (err) {
-					console.error(err.message);
-					socket.send('{"code" : -2, error : "同步失败"}');
-				} else {
-					console.log(JSON.stringify(data, null, 4));
-					if (data.code == -1) {
-						//冲突
-						socket.send(JSON.stringify(data));
-					} else {
-						//文档更新广播
-						socket.send('{"code" : 1}');
-						broadcast(socket, doc, JSON.stringify(data));
-					}
-				}
-			});
-		} else {
-			//聊天广播
-			socket.send('{"code" : 0}');
-			message.data.user = socket.id;
-			broadcast(socket, doc, JSON.stringify(message));
+		if (message.code != undefined) {
+			switch (message.code) {
+				case 0 :
+					//聊天广播
+					socket.send('{"code" : 0}');
+					message.data.user = socket.id;
+					broadcast(socket, doc, json.stringify(message));
+					break;
+				case 1 :
+					db.update(socket.userId, message.data, function (err, data) {
+						if (err) {
+							console.error(err.message);
+							socket.send('{"code" : -2, error : "同步失败"}');
+						} else {
+							console.log(json.stringify(data, null, 4));
+							if (data.code == -1) {
+								//冲突
+								socket.send(json.stringify(data));
+							} else {
+								//文档更新广播
+								socket.send('{"code" : 1}');
+								broadcast(socket, doc, json.stringify(data));
+							}
+						}
+					});
+					break;
+				case 4 :
+					broadcast(socket, doc, json.stringify({"code": 4, "data": message.data}));
+					break;
+				case 5 :
+					//首次登陆获取用户信息
+					socket.userName = COOKIE.get(message.data, "username");
+					socket.userId = COOKIE.get(message.data, "userId");
+					broadcast(socket, doc, json.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
+					break;
+				default :
+					break;
+			}
 		}
 	});
 
 	socket.on('close', function () {
-		doc.socketList[this.id] = undefined;
+		doc.socketlist[this.id] = undefined;
 		if (--doc.length === 0) {
-			delete connections[docID];
+			delete connections[docid];
 		}
 		console.log(connections);
 	});
 
-	db.get(docID, function (err, data) {
-		if (err) {
-			console.error(err.message);
-			socket.send('{"code" : -4, error : "系统错误"}');
-		} else {
-			console.log(JSON.stringify(data, null, 4));
-			socket.send(JSON.stringify({"code": 2, "data": {"title": data.data.sheetId, "count": doc.length - 1}}));
-			broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1}}));
-		}
-	});
 });
 
 // var options = {
@@ -159,8 +170,21 @@ function broadcast(socket, doc, message) {
 	for (var i = 0; i < doc.socketList.length; i++) {
 		if (doc.socketList[i] && doc.socketList[i] !== socket) {
 			doc.socketList[i].send(message);
-		} else {
-			continue;
 		}
 	}
 }
+
+var COOKIE = {
+	get: function(cookie, name) {
+        var ret = cookie.match(new RegExp("(?:^|;\\s)" + name + "=(.*?)(?:;\\s|$)"));
+        return ret ? ret[1] : "";
+    },set: function(cookie, key, value, opt) {
+        var _date = new Date(), _domain = opt.domain || "localhost:3000", _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
+        _date.setTime(_date.getTime() + _time_gap);
+        cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
+    },del: function(cookie, key, opt) {
+        var _opt = opt || {};
+        opt.time = -new Date();
+        cookie.set(key, '', opt);
+    }
+};
