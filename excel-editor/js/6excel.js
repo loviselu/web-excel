@@ -478,11 +478,10 @@ function toBoolFromString(val){
 }
 function JsonHandler(){
   var self=this;
-  //返回导出表格的json，sheet参数即为Sheet类型的变量
-  //chenjiabin
+  //chenjiabin，返回导出表格用于存与后台数据库的json，sheet参数即为Sheet类型的变量
   self.exportSheet=function(sheet){
 	var formula=null;
-    var json="{\"sheetId\":null,\"sheetName\":\"\",\"cell\":{";
+    var json="{\"sheetId\":null,\"sheetName\":\"\",\"cells\":{";
     var cells="";
 	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
@@ -506,7 +505,7 @@ function JsonHandler(){
 				alert('请稍后再试');
 				return {};
 			}
-            cells+=","+addressName+":{\"f\":"+formula+",\"v\":"+value+",\"fs\":\""+sheet.cells[i][j].getFontStyleId()+"\"}";
+            cells+=",\""+addressName+"\":{\"f\":"+formula+",\"v\":"+value+",\"fs\":\""+sheet.cells[i][j].getFontStyleId()+"\"}";
           }
         }
       }
@@ -517,7 +516,54 @@ function JsonHandler(){
     json+="}";
     return json;
   };
-  //chenjiabin
+  //chenjiabin,sheet的另一种数据格式的导出，给后台保存为xlsx文件提供数据
+  self.exportReserveSheet=function(sheet){
+    var formula=null;
+    var json="{\"sheetId\":null,\"name\":\"sheet1\",\"data\":[";
+    var cellsC="";
+	var cellsA="";
+    for(var i=0;i<sheet.cells.length;i++){
+		cellsC="";
+      if(sheet.cells[i]){
+        for(var j=0;j<sheet.cells[i].length;j++){
+          if(sheet.cells[i][j]){
+            formula=sheet.cells[i][j].getFormula();
+            if(formula==undefined||formula==""){
+			  cellsC+=',';
+            }else {
+              formula="\""+addslashes(formula)+"\"";
+			  cellsC+=','+formula; 
+            } 
+          }else{
+			cellsC+=',""';
+		  }
+        }
+		cellsA+=',['+cellsC.substr(1)+']';
+      }else{
+		cellsA+=',[]';
+	  }
+    }
+    json+=cellsA.substr(1);
+    json+="]";
+    json+="}";
+    return json;
+  };
+  //chenjiabin，另一种数据格式的sheet导入方式，导如xlsx文件时使用
+  self.importReserveSheet = function(configs,data){
+	var sheet=new Sheet(configs);
+	var sheetId = data.sheetId,
+		sheetName = data.sheetName,
+		cells = data.data,
+		i = 0,j=0;
+    for(i=0;i<cells.length;i++){
+		for(j=0;j<cells[i].length;j++){
+			sheet.setFormula(i,j,stripslashes((cells[i][j]||"").toString()),true);
+		}
+		
+    }
+    return sheet;
+  }
+  //chenjiabin，其中fs也导出为一个字符串，与exportFontStyles一致
   self.exportCell = function(address){
 	var json = '{"cell":{"';
 	var addressName = window.model.model.namespace.getRangeName(new Range(address));
@@ -560,37 +606,45 @@ function JsonHandler(){
     json='['+json.substr(1)+']';
     return json;
   };
-  self.importBook=function(configs,data){
-    var book=new Book(data.bookName);
-    book.setId(data.id||data.bookId);
-    var content=data.bookContent;
-    self.importFontStyles(content.fontStyles);
-    var sheet=self.importSheet(configs,content.sheets[0]);
-    book.setSheet(sheet);
-    return book;
-  };
+  // self.importBook=function(configs,data){
+    // var book=new Book(data.bookName);
+    // book.setId(data.id||data.bookId);
+    // var content=data.bookContent;
+    // self.importFontStyles(content.fontStyles);
+    // var sheet=self.importSheet(configs,content.sheets[0]);
+    // book.setSheet(sheet);
+    // return book;
+  // };
+  
+  //chenjiabin，importSheet因data格式改变修改
   self.importSheet=function(configs,data){
     var sheet=new Sheet(configs);
-    var cells=data.cells;
-    for(var i=0;i<cells.length;i++){
-      sheet.setFormula(cells[i].r,cells[i].c,stripslashes(cells[i].f||""),true);
-      sheet.setCellFontStyleId(cells[i].r,cells[i].c,cells[i].fs,true);
+	var sheetId = data.sheetId,
+		sheetName = data.sheetName,
+		cells = data.cells;
+	self.importFontStyles(data.fontStyles);
+    for(var i in cells){
+		var address = window.model.model.namespace.getNameAddress(i);
+		sheet.setFormula(address.start.row,address.start.col,stripslashes(cells[i].f||""),true);
+		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs,true);
     }
     return sheet;
   };
+  //chenjiabin,数据格式做相应修改
   self.importFontStyles=function(data){
     var fontStyles=data;
     for(var i=0;i<fontStyles.length;i++){
-      fontStyleId=parseInt(fontStyles[i].fontStyleId);
-      fontId=parseInt(fontStyles[i].fontId);
-      fontSize=parseFloat(fontStyles[i].fontSize);
-      fontBold=toBoolFromString(fontStyles[i].fontBold);
-      fontItalic=toBoolFromString(fontStyles[i].fontItalic);
-      fontUnderline=toBoolFromString(fontStyles[i].fontUnderline);
-      fontColor=fontStyles[i].fontColor;
-      fontAlign=Styler.getAlignName(fontStyles[i].fontHAlign);
-      fontValign=Styler.getValignName(fontStyles[i].fontVAlign);
-      Styler.addFontStyle(fontStyleId,fontId,fontSize,fontColor,fontBold,fontItalic,fontUnderline,fontAlign,fontValign);
+		var styleArr = fontStyles[i].split('|');
+		fontStyleId=parseInt(styleArr[0]||'0');
+		fontId=parseInt(styleArr[1]||'1');
+		fontSize=parseFloat(styleArr[2]||'10');
+		fontColor=styleArr[3]||'#000000';
+		fontBold=toBoolFromString(styleArr[4]||'false');
+		fontItalic=toBoolFromString(styleArr[5]||'false');
+		fontUnderline=toBoolFromString(styleArr[6]||'false');
+		fontAlign=styleArr[7]||'general';
+		fontValign=styleArr[8]||'bottom';
+		Styler.addFontStyle(fontStyleId,fontId,fontSize,fontColor,fontBold,fontItalic,fontUnderline,fontAlign,fontValign);
     }
   };
 }
@@ -923,8 +977,20 @@ function createToolbars(application){
     tb.add("-",{icon:iconspath+"saveas-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("保存")+"</b><br/>"+lang("保存到服务器"),handler:function(){
         application.saveBook();
       }});
-    tb.add({icon:iconspath+"pencil-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("另存为")+"..</b><br/>"+lang("另存为"),handler:function(){
-        saveBookConfirm();
+	  //chenjiabin，这里用到的ajax忽略IE7以下
+    tb.add({icon:iconspath+"pencil-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导出为excel文件")+"..</b><br/>"+lang("导出为excel文件"),handler:function(){
+        //saveBookConfirm();
+		alert('开始导出了哦');
+		var xhr = new XMLHttpRequest();
+		var json = encodeURIComponent(JsonManager.exportSheet(activeSheet));
+		xhr.open('post','http://localhost:3000/exportXlsx',false);
+		xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xhr.send(encodeURIComponent("data")+"="+json);
+		if((xhr.status>=200&&xhr.status<300)||xhr.status==304){
+			alert('success'+xhr.status);
+		}else{
+			alert('unsuccess');
+		}
       }});
     tb.add({icon:iconspath+"new-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("新建")+"..</b><br/>"+lang("新建表格"),handler:function(){
         application.newBook();
@@ -1331,12 +1397,19 @@ function addApplicationAPI(self){
     self.model.deleteSelection();
   };
   //responseData.bookContent.sheets[0]即是一个Sheet类
-  self.bookLoaded=function(responseData){
-    var book=self.JsonManager.importBook(self.configs.sheet,responseData);
-    self.activeBook=book;
-    self.activeSheet=book.getSheet();
-    self.setBookName(book.name);
-    self.model.setDataModel(self.activeSheet);
+  //chenjiabin,直接在函数中调用importSheet来导入sheet，不用book
+  self.bookLoaded=function(responseData,isDocument){
+    //var book=self.JsonManager.importBook(self.configs.sheet,responseData);
+    //self.activeBook=book;
+    //self.activeSheet=book.getSheet();
+    //self.setBookName(book.name);
+	if(isDocument){
+		var sheet = self.JsonManager.importReserveSheet(self.configs.sheet,responseData);
+	}else{
+		var sheet = self.JsonManager.importSheet(self.configs.sheet,responseData);
+	}
+	self.activeSheet = sheet;
+    self.model.setDataModel(sheet);
     self.model.refresh();
   };
   self.loadBook=function(bookId){
@@ -1915,6 +1988,8 @@ function createGridGui(self,width,height){
   self.scrollbars.style.zIndex=1;
   self.cellEditor=new CellEditor();
   self.selectorBox=new SelectorBox();
+  //chenjiabin,冲突提示框
+  self.diffSelector = new DiffSelector();
   self.setSize(width,height);
   self.verticalResizer=new SizeHandler(true);
   self.verticalResizer.style.left="100px";
@@ -1925,6 +2000,8 @@ function createGridGui(self,width,height){
   self.grid.appendChild(self.body);
   self.gridContainer.appendChild(self.grid);
   self.gridContainer.appendChild(self.selectorBox);
+  //chenjiabin
+  self.gridContainer.appendChild(self.diffSelector);
   self.appendChild(self.gridContainer);
   self.appendChild(self.scrollbars);
   self.appendChild(self.verticalResizer);
@@ -2122,7 +2199,62 @@ function SelectorBox(){
   self.construct();
   return self;
 }
+//chenjiabin,添加一个选择域，当出现冲突时弹出供用户选择
+function DiffSelector(){
+	var self=document.createElement("ul");
+	self.construct = function(){
+		this.id = 'diffSelector';
+		this.style.position="absolute";
+		this.style.overflow="visible";
+		this.style.background = 'white';
+		WrapStyle(this);
+		this.setZIndex(3000);
+		WrapEvents(this);
+		self.register("solveDiff");
+	}
+	self.setVisible=function(value){
+		if(value){
+		  this.style.visibility="visible";
+		}else {
+		  this.style.visibility="hidden";
+		}
+	  };
+	//根据selectorBox的位置刷新本身位置
+	self.fitToRange=function(selectorBox){
+		self.setLeft(selectorBox.offsetLeft+selectorBox.offsetWidth);
+		self.setTop(selectorBox.offsetTop);
+		try{
+		  self.setWidth(selectorBox.offsetWidth);
+		}
+		catch(e){
+		}
+		this.style.visibility="visible";
+	  };
+	 self.addContent=function(arr){
+		var childs = self.childNodes;
+		for(var i = childs.length - 1; i >= 0; i--){  
+			alert(childs[i].nodeName);  
+			self.removeChild(childs[i]);  
+		}  
+		for(i= 0;i<arr.length;i++){
+			var li = document.createElement('li');
+			li.innerHTML = arr[i];		//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
+			li.onclick = function(){
+				var val = this.innerHTML;
+				grid.cellEditor.setValue(val);
+				self.fire("solveDiff");
+			}
+			self.appendChild(li);
+		}
+	 }
+	self.construct();
+	return self;
+}
 function addGridMethods(grid){
+	//chenjiabin,用户选择最终数据
+	grid.diffSelector.on('solveDiff',function(selector){
+		selector.setVisible(false);
+	});
   grid.selectorBox.on("EditingMode",function(){
     grid.fire("EditingMode",true);
   });
@@ -3143,7 +3275,8 @@ function ExtendModelEvents(self,grid){
       if(address.col!=undefined){
         address.col+=self.viewport.start.col;
       }
-      self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件
+	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
+      self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件，改变model.activeCell
       self.setSelection(new Range(address));
       self.refresh();
     }
