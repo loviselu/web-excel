@@ -30,6 +30,11 @@ exports.routes = [
 		'pattern': '/user/register',
 		'method': 'post',
 		'handler': 'register'
+	},
+	{
+		'pattern': '/user/logout',
+		'method': 'get',
+		'handler': 'logout'
 	}
 ];
 
@@ -124,3 +129,14 @@ exports.register = function(req,res){
 	}
 }
 
+/**
+ * 注销
+ * @param req
+ * @param res
+ */
+exports.logout = function (req, res){
+	req.session = null;
+	res.clearCookie('userId');
+	res.clearCookie('username');
+	res.redirect('/');
+}

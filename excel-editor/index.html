@@ -24,6 +24,7 @@
 	    <script type="text/javascript" src="/javascripts/fileManage.js"></script>
 	    <link rel="stylesheet" type="text/css" href="/stylesheets/fileManage.css">
         <link rel="stylesheet" type="text/css" href="/excel-editor/js/6excel.css">
+		<link rel="stylesheet" href="/public/stylesheets/chat.css"/>
     </head>
     <body id="body" onload="load();">
         <div id="west"></div>
@@ -32,20 +33,22 @@
         <div id="center"></div>
         <div style="width: 200px; height: 200px; overflow: hidden" id="east"></div>
         <div id="south"></div>
-        <div id='chatHeader' style='display:none; position:absolute; top:6px; right:15px; width:400px; height:20px; font-size:12px;'>
-            <a id='chatBtn' href="javascript:void(0);" style='color:#777;'>聊天</a>
+        <div id='chatHeader' class="chatHeader">
+            <a id='chatBtn' href="javascript:void(0);" class="chatBtn">聊天</a>
         </div>
-        <div id='chatContainer' style='display:none; position:absolute; top:26px; right:16px; width:400px; height:400px; border:1px solid #ccc; z-index:100; background-color:#fff; box-shadow:0 2px 5px 0 #ccc;'>
-            <div style='height:21px;'>
-                <span style='float:left; font-size:12px; line-height:21px;'>&nbsp;当前协作人数：<span id='chatCount'>0</span></span>
-                <div id='closeBtn' style='cursor:pointer; display:inline-block; float:right; width:21px; height:21px; background-image:url("/excel-editor/themes/6excel/img/icons/close.png")'></div>
+        <div id='chatContainer' class="chatContainer">
+            <div class="chatBanner" >
+                <span class="count">&nbsp;当前协作人数：<span id='chatCount'>0</span></span>
+                <div id='closeBtn' class="closeBtn"></div>
             </div>
             <div id='userCount' style=''></div>
-            <div style='margin-bottom:15px; padding:10px 10px 0 10px; height:272px; width:380px;'>
-                <ul id='chatList' style='height:272px; width:380px;overflow-y:auto;'></ul>
-            </div>
-            <textarea id='chatContent' style='margin-left:13px; height:30px; width:370px'></textarea>
+            <div class='chatList_div'>
+                <ul id='chatList' class="chatList"></ul>
+yle='margin-left:13px; height:30px; width:370px'></textarea>
             <button id='sendBtn' style='margin:5px 0 0 13px ;'>发送</button>
+            </div>
+            <textarea id='chatContent' class="chatContent"></textarea>
+            <button id='sendBtn' class="sendBtn">发送</button>
         </div>
         <script type="text/javascript">
         function load(){
@@ -59,10 +62,10 @@
             });
 
             var online = true;
-            if (online) {
+            if (navigator.onLine) {
                 if (location.pathname.length > 1 && location.pathname !== '/index.html') {
                     //非新文档
-                    doc = new collaborate();
+                    doc = new Collaborate();
                 } else {
                     //新文档
                     // if () {
@@ -75,7 +78,7 @@
         }
 
         //非新文档建立链接和聊天工具
-        function collaborate () {
+        function Collaborate () {
             //copy
             var me = this;
 
@@ -84,7 +87,7 @@
             this.count = null;
 
             //websocket
-            var url = 'ws://' + location.hostname + ':8080' + location.pathname,
+            var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\//g,''),
                 socket = new WebSocket(url);
             
             socket.onmessage = function (message) {
@@ -106,42 +109,60 @@
                             me.count = mes.data.count;
                             document.getElementById('chatCount').innerText = me.count;
                             break;
-                        case 1 : 
+						case 4:
+                            //编辑状态更新
+
+                            break;
+                        case 1 :
                             //文档操作
                             if (mes.data instanceof Object) {
                                 //文档被更新,可直接合并
                             } else {
                                 //编辑成功
+								console.log("同步成功");
                             }
                             break;
                         case 0 :
                             //聊天 
                             if (mes.data instanceof Object) {
                                 chat.recieve(mes.data);
-                            }
+                            } else {
+								//成功发送聊天信息
+								console.log("成功发送聊天信息");
+							}
                             break;
                         case -1 :
                             //存在冲突
                             break;
                         case -2 :
                             //同步失败,系统出错
+							console.log("服务器同步失败");
+							break;
                         case -3 :
                             //参数错误
+							console.log("参数错误");
+							break;
                         case -4 :
                             //系统错误
-                        default : break;
+							console.log("系统错误");
+							break;
+                        default :
+							break;
                     }
                 }
             };
 
             socket.onerror = function (e){
                 console.log(e);
-            }
+            };
 
             //send sth.
             this.send = function (data) {
                 socket.send(JSON.stringify(data));
-            }
+            }({
+				code : 5,
+				data : document.cookie
+			});
 
             //聊天工具
             var chat = {
@@ -185,27 +206,43 @@
                         me.send({
                             "code" : 0,
                             "data" : {
-                                'content' : message
+                                "content" : encodeURIComponent(message),
+								"userName" : COOKIE.get(document.cookie, "username")
                             }
                         });
                     }
                 },
                 recieve : function (message) {
                     if (message != undefined) {
-                        this.createMes(message.content, message.user);
+                        this.createMes(decodeURIComponent(message.content), message.userName);
                     }
                 },
                 createMes : function (mes, user) {
-                    if (user === undefined) user = '我';
+                    user = user || '我';
                     var newChat = document.createElement('li');
-                    newChat.style.cssText = 'font-size:12px; width:360px; word-break:break-all; line-height:16px';
+                    newChat.class = 'chatLi';
                     newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + mes;
                     chatList.appendChild(newChat);
                     chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
                 }
-            }
+            };
             chat.init();
         }
+
+		var COOKIE = {
+			get: function(cookie, name) {
+				var ret = cookie.match(new RegExp("(?:^|;\\s)" + name + "=(.*?)(?:;\\s|$)"));
+				return ret ? ret[1] : "";
+			},set: function(cookie, key, value, opt) {
+				var _date = new Date(), _domain = opt.domain || "localhost:3000", _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
+				_date.setTime(_date.getTime() + _time_gap);
+				cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
+			},del: function(cookie, key, opt) {
+				var _opt = opt || {};
+				opt.time = -new Date();
+				cookie.set(key, '', opt);
+			}
+		};
         </script>
     </body>
 </html>

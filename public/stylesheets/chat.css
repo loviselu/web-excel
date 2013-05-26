@@ -1,0 +1,63 @@
+.chatHeader {
+	display:none;
+	position:absolute;
+	top:6px;
+	right:15px;
+	width:400px;
+	height:20px;
+	font-size:12px;
+}
+.chatContainer {
+	display:none;
+	position:absolute;
+	top:26px;
+	right:16px;
+	width:400px;
+	height:400px;
+	border:1px solid #ccc;
+	z-index:100;
+	background-color:#fff;
+	box-shadow:0 2px 5px 0 #ccc;
+}
+.chatBanner {
+	height:21px;
+}
+.chatBtn {
+	color:#777;
+}
+.closeBtn {
+	cursor:pointer;
+	display:inline-block;
+	float:right;
+	width:21px;
+	height:21px;
+	background-image:url("/excel-editor/themes/6excel/img/icons/close.png");
+}
+.chatList_div {
+	margin-bottom:15px;
+	padding:10px 10px 0 10px;
+	height:272px;
+	width:380px;
+}
+.chatList {
+	height:272px;
+	width:380px;
+	overflow-y:auto;
+}
+.chatLi {
+	font-size:12px;
+	width:360px;
+	word-break:break-all;
+	line-height:16px;
+	background-color: #eee;
+	margin-top: 5px;
+}
+.chatContent {
+	margin-left:13px;
+	height:30px;
+	width:370px;
+}
+.sendBtn {
+	margin:5px 0 0 13px;
+}
+
