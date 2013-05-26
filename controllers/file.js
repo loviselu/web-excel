@@ -125,7 +125,7 @@ exports.getFileList = function(req,res){
 						}
 
 						for(var i = result.length-1;i>=0;i--){
-							if(result[i].owner && result[i].owner === req.seesion.userId){
+							if(result[i].owner && result[i].owner === req.session.userId){
 								if(result[i].in_recyclebin){
 									recyclebin.push(result[i]);
 								}else{

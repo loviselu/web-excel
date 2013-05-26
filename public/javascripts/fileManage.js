@@ -5,6 +5,7 @@ $(function(){
 	var recyclebin_item_tmpl = "";
 	var renameDialog_tmpl = "";
 	var shareDialog_tmpl = "";
+	var messageDialog_tmpl = "";
 
 	//---------------------------fileLayout_tmpl--------------------------------------------
 	fileLayout_tmpl += "<div id=\"fileLayout\">";
@@ -105,13 +106,57 @@ $(function(){
 	shareDialog_tmpl += "   <\/div>";
 	shareDialog_tmpl += "<\/div>";
 
+	//-------------------------------messageDialog_tmpl----------------------------------------------
+	messageDialog_tmpl += "<div class=\"popupDialog\" id=\"messageDialog\" style=\"display:none\">";
+	messageDialog_tmpl += "    <div class=\"head\">";
+	messageDialog_tmpl += "        <h3><%=(title || '提示')%><\/h3>";
+	messageDialog_tmpl += "        <div class=\"icon-close js_close\"><\/div>";
+	messageDialog_tmpl += "    <\/div>";
+	messageDialog_tmpl += "    <div class=\"body\">";
+	messageDialog_tmpl += "        <div class=\"title\">";
+	messageDialog_tmpl += "	        <span><%=message%><\/span>";
+	messageDialog_tmpl += "        <\/div>";
+	messageDialog_tmpl += "        <div class=\"bottom\">";
+	messageDialog_tmpl += "            <button class='button'>确定<\/button>";
+	messageDialog_tmpl += "            <button class='button js_close'>取消<\/button>";
+	messageDialog_tmpl += "        <\/div>";
+	messageDialog_tmpl += "    <\/div>";
+	messageDialog_tmpl += "<\/div>";
+
+	//编辑模版
 	var my_files_item_tmpl_func = template.compile(myfiles_item_tmpl);
 	var share_to_me_item_tmpl_func = template.compile(share_to_me_item_tmpl);
 	var recyclebin_item_tmpl_func = template.compile(recyclebin_item_tmpl);
+	var messageDialog_tmpl_func = template.compile(messageDialog_tmpl);
 
+	//通用函数
+	$.fn.autoPosition = function(){
+		this.css('left',($(window).width()-this.width())/2);
+		this.css('top',($(window).height()-this.height())/2+$('body').scrollTop()+'px');
+		return $(this);
+	};
+
+	//通用消息框函数
+	$.showMessage = function(message,title){
+		var messageDialog = $(messageDialog_tmpl_func({message:message,title:title}));
+		messageDialog.appendTo(document.body).autoPosition().show();
+	}
+
+	//弹出层通用操作
+	$('body').on('click','.popupDialog .js_close',function(){
+		$(this).closest('.popupDialog').hide();
+	});
+
+	//输入面板节点
 	$(document.body).append($.parseHTML(fileLayout_tmpl));
 	$(document.body).append($.parseHTML(shareDialog_tmpl));
 	$(document.body).append($.parseHTML(renameDialog_tmpl));
+
+	$('#fileBoard .explorer').height(($(window).height()-124)+'px');
+
+	$(window).on('resize',function(){
+		$('#fileBoard .explorer').height(($(window).height()-124)+'px');
+	});
 
 	$('#toggleFB').on('click',function(){
 		if($('#fileBoard').is(':visible')){
@@ -132,47 +177,6 @@ $(function(){
 		$(this).next('.explorer').show();
 		$(this).find('.sbItemExp').removeClass('sbItemCol');
 	})
-
-	$('#fileBoard .explorer').height(($(window).height()-124)+'px');
-
-	$(window).on('resize',function(){
-		$('#fileBoard .explorer').height(($(window).height()-124)+'px');
-	});
-
-	$('#fileBoard .explorer .my_files').on('click','.fi_icon_command',function(){
-		$('#command_list').css({
-			top:$(this).position().top + 20 + 'px',
-			left:$(this).position().left
-		}).show();
-		$('#command_list').focus();
-		$('#command_list').on('blur',function(){
-			$('#command_list').hide();
-		})
-	});
-	$('#command_list .js_setAuth').on('click',function(){
-		$('#command_list').hide();
-		$('#shareDialog').css({
-			top:($(window).height()-$('#shareDialog').height())/2+'px',
-			left:($(window).width()-$('#shareDialog').width())/2+'px'
-		}).show();
-	})
-
-	$('#command_list .js_rename').on('click',function(){
-		$('#command_list').hide();
-		$('#renameDialog').css({
-			top:($(window).height()-$('#shareDialog').height())/2+'px',
-			left:($(window).width()-$('#shareDialog').width())/2+'px'
-		}).show();
-	})
-
-	$('.popupDialog .js_close').on('click',function(){
-		$('.popupDialog').hide();
-	});
-
-	$('#fileBoard').on('click','.explorer .item fileName',function(){
-
-	})
-
 
 	//加载json数据
 	$.getJSON('/file/getFileList',function(data){
@@ -212,4 +216,44 @@ $(function(){
 			}
 		}
 	})
+
+	//操作按钮点击
+	$('#fileBoard .my_files').on('click','.fi_icon_command',function(){
+
+		$('#fileBoard .my_files .item').removeClass('activeItem');
+		$(this).closest('.item').addClass('activeItem');
+
+		$('#command_list').css({
+			top:$(this).position().top + 20 + 'px',
+			left:$(this).position().left
+		}).show();
+		$('#command_list').focus();
+		$('#command_list').on('blur',function(){
+			$('#command_list').hide();
+		})
+	});
+
+	//操作-重命名
+	$('#command_list .js_rename').on('click',function(){
+		$('#command_list').hide();
+		$('#renameDialog').autoPosition().show();
+	})
+
+	$()
+
+	//操作-设置权限
+	$('#command_list .js_setAuth').on('click',function(){
+		$('#command_list').hide();
+		$('#shareDialog').autoPosition().show();
+	})
+
+	//操作-移到回收桶
+	$('#command_list .js_remove').on('click',function(){
+
+	})
+
+
+
+
+
 })

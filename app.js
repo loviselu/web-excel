@@ -24,6 +24,10 @@ app.use('/themes', express.static(__dirname + '/excel-editor/themes'));
 app.use(express.cookieParser('secret'));
 app.use(express.cookieSession());
 app.use(express.bodyParser());
+app.use(function(req,res,next){
+	res.set('Content-Type','text/html; charset=UTF-8');
+	next();
+})
 
 //加载控制器
 var controllers = ['user', 'index', 'file'];
