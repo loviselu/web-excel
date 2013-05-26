@@ -479,9 +479,9 @@ function toBoolFromString(val){
 function JsonHandler(){
   var self=this;
   //chenjiabin，返回导出表格用于存与后台数据库的json，sheet参数即为Sheet类型的变量
-  self.exportSheet=function(name,sheet){
+  self.exportSheet=function(sheet){
 	var formula=null;
-    var json='{"fileName":"'+name+'","cells":{';
+    var json='{"cells":{';
     var cells="";
 	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
@@ -505,14 +505,15 @@ function JsonHandler(){
 				alert('请稍后再试');
 				return {};
 			}
-            cells+=",\""+addressName+"\":{\"f\":"+formula+",\"v\":"+value+",\"fs\":\""+sheet.cells[i][j].getFontStyleId()+"\"}";
+			var fontId = sheet.cells[i][j].getFontStyleId();
+			var fontStyle = Styler.getFontStyleById(fontId).id;
+            cells+=",\""+addressName+"\":{\"f\":"+formula+",\"fs\":\""+fontId+"|"+fontStyle+"\"}";
           }
         }
       }
     }
 	json+=cells.substr(1);
 	json+="}";
-	json+=',"fontStyles":'+self.exportFontStyles();
     json+="}";
     return json;
   };
@@ -579,6 +580,24 @@ function JsonHandler(){
 	json+='"}}}}';
 	return json;
   }
+  //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
+  self.importCell =function(data){
+	var addressName,address;
+	for(var i in data.cell){
+		addressName = i;
+		address = window.model.model.namespace.getNameAddress(addressName);
+		break;//address.start.row,addresss.start.col
+	}
+	var localVal = application.model.model.getFormula(address.start.row,address.start.col);
+	var oldVal = data.cell[addressName].old.f;
+	if(localVal==oldVal){
+		var sheet=application.activeSheet;
+		self.importFontStyles(Array(data.cell[addressName].now.fs));
+		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cell[addressName].now.f||""),true);
+		sheet.setCellFontStyleId(address.start.row,address.start.col,data.cell[addressName].now.fs.charAt(0),true);
+		application.model.refresh();
+	}
+  }
   // self.exportBook=function(id,book,sheet){
     // if(id==undefined){
       // id="null";
@@ -617,16 +636,15 @@ function JsonHandler(){
   // };
   
   //chenjiabin，importSheet因data格式改变修改
-  self.importSheet=function(configs,data){
-    var sheet=new Sheet(configs);
-	var sheetId = data.sheetId,
-		sheetName = data.sheetName,
-		cells = data.cells;
-	self.importFontStyles(data.fontStyles);
+  self.importSheet=function(data){
+    var sheet=application.activeSheet;
+	sheet.fileName = data.fileName;
+	var cells = data.cells;
     for(var i in cells){
 		var address = window.model.model.namespace.getNameAddress(i);
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(cells[i].f||""),true);
-		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs,true);
+		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs.charAt(0),true);
+		self.importFontStyles(Array(cells[i].fs));
     }
     return sheet;
   };
@@ -872,7 +890,7 @@ function CommHandler(configs){
     Ext.MessageBox.show({title:"通信故障",msg:"无返回数据。",buttons:Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
   };
   self.sendRequest=function(parameters,url,successFn,failureFn){
-    Ext.Ajax.request({method:"post",waitMsg:"请稍候...",url:url,success:successFn,failure:failureFn});
+    Ext.Ajax.request({params:parameters,method:"post",waitMsg:"请稍候...",url:url,success:successFn,failure:failureFn});
   };
   //发起请求loadbook
   self.loadBook=function(bookId,callback){
@@ -884,8 +902,8 @@ function CommHandler(configs){
 	alert("成功将新建表格保存至服务器~~");
   };
   //chenjiabin
-  self.sendBook=function(data){
-    var params={saveData:data};
+  self.sendBook=function(name,data){
+    var params={fileName:name,data:data};
     self.sendRequest(params,"/file/newFile",self.bookSaveServerResponse,function(){alert("保存失败");});
   };
   self.exportBook=function(data,format){
@@ -1427,8 +1445,8 @@ function addApplicationAPI(self){
       bookName=self.activeSheet.name;
     }
     self.activeSheet.name=bookName;
-    var json=JsonManager.exportSheet(bookName,self.activeSheet);
-    self.CommManager.sendBook(json);
+    var json=JsonManager.exportSheet(self.activeSheet);
+    self.CommManager.sendBook(bookName,json);
   };
   self.exportBook=function(format){
     var json=JsonManager.exportBook(self.activeBook.getId(),self.activeBook,self.activeSheet);
