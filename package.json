@@ -9,6 +9,7 @@
     "express": "3.1.0",
     "jade": "*",
 	"mongodb" :"*",
-	"ws":"*"
+	"ws":"*",
+	"JQDeferred":"*"
   }
 }

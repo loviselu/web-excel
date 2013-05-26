@@ -1,0 +1,215 @@
+#fileLayout{
+	position: absolute;
+	z-index: 1000;
+	top: 25px;
+	bottom:17px;
+}
+#fileBoard{
+	width: 210px;
+	height: 100%;
+	background-color: white;
+	border: 1px solid rgb(165,187,251);
+	overflow-y: hidden;
+}
+#fileBoard .explorerToggle{
+	width: 100%;
+	padding: 4px 0px;
+	border-top: 1px solid rgb(229,238,253);
+	border-bottom: 1px solid rgb(191,202,255);
+	background-color: rgb(229, 238, 253);
+	font-family: Trebuchet MS, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	font-weight: bold;
+	letter-spacing: 0.3px;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.sbItemExp, .sbItemCol{
+	width: 14px;
+	height: 14px;
+	border: 0px;
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -563px -54px;
+	background-color: transparent;
+	cursor: pointer;
+	display: inline-block;
+}
+.sbItemCol {
+	background-position: -584px -54px;
+}
+#toggleFB {
+	position: absolute;
+	top: 40%;
+	width: 11px;
+	height: 88px;
+	left: 0px;
+	background: url(../images/sb_handle.gif);
+	cursor:pointer;
+}
+#fileBoard .explorer{
+	overflow-y: auto;
+}
+#fileBoard .explorer .item{
+	padding-left: 5px;
+	padding-top: 5px;
+}
+#fileBoard .item .fi_icon_command {
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -690px -75px;
+	width: 18px;
+	height: 12px;
+	display: inline-block;
+	position: absolute;
+	cursor: pointer;
+	right: 10px;
+	margin-top: 6px;
+}
+#fileBoard .item .fi_icon_revert{
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -731px -92px;
+	width: 9px;
+	height: 9px;
+	display: inline-block;
+	position: absolute;
+	cursor: pointer;
+	right: 26px;
+	margin-top: 6px;
+}
+#fileBoard .item .fi_icon_delete{
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -715px -92px;
+	width: 9px;
+	height: 9px;
+	display: inline-block;
+	position: absolute;
+	cursor: pointer;
+	right: 10px;
+	margin-top: 6px;
+}
+#fileBoard .item .fileName {
+	font-size: 14px;
+	cursor: pointer;
+	text-decoration: none;
+}
+#fileBoard .item .fileName:hover {
+	text-decoration: underline;
+}
+#fileBoard .explorer .message {
+	font-size: 12px;
+	margin: 5px;
+}
+#toggleFB .sbCol {
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -51px -50px;
+	width: 6px;
+	height: 10px;
+	padding: 0px;
+	border: 0px;
+	background-color: transparent;
+	margin-top: 38px;
+}
+
+#toggleFB .sbCol,#toggleFB .sbExp {
+	background-image: url(../images/main_bg_img.gif);
+	background-position: -51px -50px;
+	width: 6px;
+	height: 10px;
+	padding: 0px;
+	border: 0px;
+	background-color: transparent;
+	margin-top: 38px;
+}
+#toggleFB .sbExp {
+	background-position: -84px -50px;
+}
+#command_list {
+	position: absolute;
+	width: 107px;
+	padding: 6px;
+	border: 1px solid gray;
+	border-radius: 5px;
+	background-color: white;
+	z-index: 1100;
+	display: none;
+}
+#command_list .item{
+	padding: 3px;
+	padding-left: 10px;
+	margin-bottom: 4px;
+	cursor: pointer;
+	font-size: 14px;
+}
+#command_list .item:hover{
+	background-color: rgb(229,238,253);
+}
+#command_list:focus{
+	outline:none;
+}
+
+.popupDialog{
+	position: absolute;
+	z-index: 10000;
+	width: 592px;
+	height: 265px;
+	background-color: white;
+	border: 5px solid rgb(191,202,255);
+}
+.popupDialog .head{
+	height: 30px;
+	line-height: 30px;
+	padding-left: 6px;
+	background-color: rgb(191,220,255);
+	font-size: 13px;
+	position: relative;
+}
+.popupDialog .head .icon-close{
+	width: 10px;
+	height: 10px;
+	background: url(../images/dialogClose.gif) no-repeat center center;
+	background-color: rgb(242, 245, 255);
+	cursor: pointer;
+	padding: 3px;
+	border: 1px solid rgb(206,224,251);
+	position: absolute;
+	top: 5px;
+	right: 7px;
+}
+.popupDialog .body{
+	padding:5px 10px;
+}
+.popupDialog .body .title{
+	font-size: 14px;
+	line-height: 14px;
+}
+.popupDialog .body .textarea{
+	width: 100%;
+	height: 56px;
+	margin: 6px 0;
+}
+.popupDialog .body .input{
+	width: 100%;
+	margin: 6px 0;
+}
+.popupDialog .body .bottom{
+	margin-top: 10px;
+	text-align: right;
+}
+.popupDialog .body .button{
+	height: 23px;
+	border: 1px solid rgb(151,196,237);
+	background-color: rgb(187, 211, 245);
+	color: rgb(1, 0, 0);
+	vertical-align: middle;
+	margin: 0;
+	padding: 0 15px;
+	width: auto;
+	overflow: visible;
+	cursor: pointer;
+}
+.popupDialog .gray{
+	color: gray;
+}
+
+#renameDialog{
+	height: 135px;
+}

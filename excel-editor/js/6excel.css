@@ -83,6 +83,7 @@
 	cursor: s-resize ;
 	height: 5px ;
 	width: 100% ;
+	position: absolute;
 }
 
 .RowFocused{
@@ -177,6 +178,7 @@
 	border: none;
 	overflow: visible;
 	margin-left: -1px ;
+	outline: none;
 }
 
 #ActiveRange{

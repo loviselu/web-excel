@@ -9,13 +9,5 @@ db_connector.open(function(err,db){
 })
 
 exports.ready = function(callback){
-	try{
-		callback(g_db);
-	}catch(err){
-		db_connector.open(function(err,db){
-			g_db = db;
-			callback(g_db);
-		})
-	}
-
+	callback(g_db);
 }

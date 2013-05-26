@@ -479,9 +479,9 @@ function toBoolFromString(val){
 function JsonHandler(){
   var self=this;
   //chenjiabin，返回导出表格用于存与后台数据库的json，sheet参数即为Sheet类型的变量
-  self.exportSheet=function(sheet){
+  self.exportSheet=function(name,sheet){
 	var formula=null;
-    var json="{\"sheetId\":null,\"sheetName\":\"\",\"cells\":{";
+    var json='{"fileName":"'+name+'","cells":{';
     var cells="";
 	for(var i=0;i<sheet.cells.length;i++){
       if(sheet.cells[i]){
@@ -834,6 +834,7 @@ function trim(str,charlist){
   }
   return whitespace.indexOf(str.charAt(0))===-1?str:"";
 }
+//
 function CommHandler(configs){
   var self=this;
   self.configs={url:"index.php",method:"POST"};
@@ -870,26 +871,29 @@ function CommHandler(configs){
   self.requestFailed=function(response){
     Ext.MessageBox.show({title:"通信故障",msg:"无返回数据。",buttons:Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
   };
-  self.sendRequest=function(parameters,successFn,failureFn){
-    Ext.Ajax.request({method:self.configs.method,waitMsg:"请稍候...",url:self.configs.url,success:function(response,param){
-        self.recieveRequest(response,param,successFn,failureFn);
-      },failure:self.requestFailed,params:parameters});
+  self.sendRequest=function(parameters,url,successFn,failureFn){
+    Ext.Ajax.request({method:"post",waitMsg:"请稍候...",url:url,success:function(response,param){
+        alert("保存成功");
+		//self.recieveRequest(response,param,successFn,failureFn);
+      },failure:function(){}});
   };
   //发起请求loadbook
   self.loadBook=function(bookId,callback){
     self.sendRequest({c:"Spreadsheet",m:"loadBook",param1:bookId,ogId:window.ogID||0,ogWid:window.ogWID||0},callback);
   };
   self.bookSaveServerResponse=function(data){
+  alert("成功新建保存");/* 
     application.activeBook.setId(data.BookId);
     bookId=application.activeBook.getId();
     parent.og.openLink(parent.og.getUrl("files","save_spreadsheet",{id:window.ogID||0,book:bookId,name:application.activeBook.getName()}),{onSuccess:function(data){
         window.ogID=data.sprdID;
       },onError:function(data){
         deleteBook(bookId);
-      }});
+      }}); */
   };
-  self.sendBook=function(data,format){
-    var params={c:"Spreadsheet",m:"saveBook",param1:data,param2:"json",param3:"json",ogId:window.ogID||0,ogWid:window.ogWID||0};
+  //chenjiabin
+  self.sendBook=function(data){
+    var params={createData:data};
     self.sendRequest(params,self.bookSaveServerResponse);
   };
   self.exportBook=function(data,format){
@@ -931,9 +935,7 @@ function saveBookConfirm(){
   function showResultText(btn,text){
     if(btn=="ok"){
       if(valid_name.test(text)){
-        if(text.substring(text.length-4)!=".gel"){
-          text+=".gel";
-        }
+		
         window.saveBook(text);
       }else {
         Ext.MessageBox.prompt("另存为..","请输入文件名：",showResultText);
@@ -995,8 +997,8 @@ function createToolbars(application){
     tb.add({icon:iconspath+"new-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("新建")+"..</b><br/>"+lang("新建表格"),handler:function(){
         application.newBook();
       }},"-");
-    tb.add({icon:iconspath+"refresh-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("刷新表格")+"..</b><br/>"+lang("刷新表格"),handler:function(){
-        application.refresh();
+    tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
+        
       }},"-");
     
     //导入导出需要服务器支持
@@ -1080,18 +1082,9 @@ function createToolbars(application){
             window.FormulaBar.setValue("=Min(");
             window.FormulaBar.focus();
           }},"-",{hideLabel:true,text:lang("更多函数"),handler:formulaWizard}]})});
-    tb.add({disabled:false,icon:iconspath+"range2.png",cls:"x-btn-icon",tooltip:"<i>"+lang("选区")+"</i>",handler:function(){
-        namesDialog();
-      }});
     tb.add({disabled:false,icon:iconspath+"show-formula.png",cls:"x-btn-icon",tooltip:"<i>"+lang("查看函数")+"</i>",handler:function(){
         application.switchViewMode(!this.pressed);
         this.toggle(!this.pressed);
-      }});
-    tb.add({disabled:false,icon:iconspath+"decimal-increase.png",cls:"x-btn-icon",tooltip:"<i>"+lang("增加精度")+"</i>",handler:function(){
-        application.increaseDecimals();
-      }});
-    tb.add({disabled:false,icon:iconspath+"decimal-decrease.png",cls:"x-btn-icon",tooltip:"<i>"+lang("减少精度")+"</i>",handler:function(){
-        application.decreaseDecimals();
       }});
     var tb2=new Ext.Toolbar();
     tb2.render("north");
@@ -1413,7 +1406,7 @@ function addApplicationAPI(self){
     self.model.refresh();
   };
   self.loadBook=function(bookId){
-    self.CommManager.loadBook(bookId,self.bookLoaded);
+    //self.CommManager.loadBook(bookId,self.bookLoaded);
   };
   self.setBookName=function(bookName){
     self.activeBook.setName(bookName);
@@ -1422,26 +1415,30 @@ function addApplicationAPI(self){
   self.saveBook=function(bookName){
     var bookId="null";
     if(bookName==undefined){
-      if(window.ogID){
-        bookName=self.activeBook.getName();
+      if(self.activeSheet.name){
+        bookName=self.activeSheet.name;
       }else {
         saveBookConfirm();
         return ;
       }
       var id=self.activeBook.getId();
-    }else {
-      window.ogID=null;
-    }
+	  if(self.activeSheet.id){
+		var id=self.activeSheet.id;
+	  }else{
+		var id='';
+	  }
+    }else {}
     if(bookName==undefined){
-      bookName=self.activeBook.getName();
+      bookName=self.activeSheet.name;
     }
-    self.setBookName(bookName);
-    var json=JsonManager.exportBook(id,self.activeBook,self.activeSheet);
-    self.CommManager.sendBook(json,"json");
+    self.activeSheet.name=bookName;
+    var json=JsonManager.exportSheet(bookName,self.activeSheet);
+	
+    self.CommManager.sendBook(json);
   };
   self.exportBook=function(format){
     var json=JsonManager.exportBook(self.activeBook.getId(),self.activeBook,self.activeSheet);
-    self.CommManager.exportBook(json,format);
+    //self.CommManager.exportBook(json,format);
   };
   self.newBook=function(){
     Ext.MessageBox.show({title:lang("New_Book_Dialog_Title"),msg:lang("New_Book_Dialog_Text")+"<br>"+lang("Do_you_want_to_continue"),buttons:Ext.Msg.YESNOCANCEL,icon:Ext.MessageBox.OK,fn:function(btn){
