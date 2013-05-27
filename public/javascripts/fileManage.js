@@ -54,7 +54,7 @@ $(function(){
 	//-------------------------share_to_me_item_tmpl---------------------------------------
 	share_to_me_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
 	share_to_me_item_tmpl += "    <a class=\"fileName\" href=\"/doc/<%=id%>\"><%=name%><\/a>";
-	share_to_me_item_tmpl += "    <span class=\"fi_icon_delete\" title=\"删除显示\"><\/span>";
+	share_to_me_item_tmpl += "    <span class=\"fi_icon_delete js_delete\" title=\"删除显示\"><\/span>";
 	share_to_me_item_tmpl += "<\/div>";
 
 	//-------------------------recyclebin_item_tmpl---------------------------------------
@@ -288,6 +288,25 @@ $(function(){
 			}
 		})
 	})
+
+	//共享给我的文件-删除
+	$('#fileBoard .share_to_me').on('click','.js_delete',function(){
+
+		var thatItem = $(this).closest('.item');
+		var fileID = thatItem.data('fileid');
+		var fileName = thatItem.text();
+
+		$.post('/file/removeShareFile',{fileID:fileID},function(data){
+			if(data.code === 0){
+				thatItem.remove();
+				if($('#fileBoard .share_to_me').children().length === 1){
+					$('#fileBoard .share_to_me .message').show();
+				}
+			}else{
+				$.showMessage(data.message,'删除失败');
+			}
+		})
+	});
 
 	//操作-移到回收桶
 	$('#command_list .js_remove').on('click',function(){
