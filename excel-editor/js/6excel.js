@@ -2264,11 +2264,13 @@ function DiffSelector(){
 		var address = application.model.model.namespace.getNameAddress(addressName).start;
 		var localVal = application.model.model.getFormula(address.row,address.col);
 		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+json.data.present.f+'</span>';
-		self.childNodes[2].innerHTML = '2、其他用户数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
+		self.childNodes[2].innerHTML = '2、自己数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
 		self.childNodes[1].onclick = function(){
 			var val = this.childNodes[1].innerHTML;
 			application.model.model.setFormula(address.row,address.col,val);
 			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.data.present.f);
+			JsonManager.importFontStyles(Array(json.data.present.fs));
+			window.activeSheet.setCellFontStyleId(address.row,address.col,json.data.present.fs.charAt(0),true);
 			if(window.doc){
 				var cellData = JsonManager.exportCell(address);
 				doc.send({"code":1,"data":cellData});
@@ -2293,8 +2295,8 @@ function DiffSelector(){
 function addGridMethods(grid){
 	//chenjiabin,用户选择最终数据
 	grid.diffSelector.on('solveDiff',function(selector){
-		window.model.refresh();
 		selector.setVisible(false);
+		window.model.refresh();
 	});
   grid.selectorBox.on("EditingMode",function(){
     grid.fire("EditingMode",true);
