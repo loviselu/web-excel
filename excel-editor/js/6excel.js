@@ -1271,7 +1271,7 @@ function Application(container){
 	//ActiveCellChanged事件的唯一侦听器，设置FormulaBar的值
     self.model.on("ActiveCellChanged",function(obj,value){
 	  //输入公式框set该单元格的值
-      FormulaBar.setValue(value);
+      FormulaBar.setValue(value);  
     });
     self.model.refresh();
 	//添加表格键盘事件
@@ -2185,6 +2185,7 @@ function SelectorBox(){
     catch(e){
     }
     this.style.visibility="visible";
+	Collaborate.send({"code":4,"data":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}});
   };
   self.fitToArea=function(area){
     var borderWidth=3;
