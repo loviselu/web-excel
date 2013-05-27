@@ -15,6 +15,24 @@
         <!--script type=text/javascript src="js/ext-base.js"></script-->
         <!--script type=text/javascript src="js/ext-all0.js"></script-->
         <link rel="stylesheet" type="text/css" href="/excel-editor/ext-2.2/resources/css/ext-all.css">
+		<script type="text/javascript">
+			var COOKIE = {
+				get: function (cookie, name) {
+					var ret = cookie.match(new RegExp("(?:^|;\\s)" + name + "=(.*?)(?:;\\s|$)"));
+					return ret ? ret[1] : "";
+				},
+				set: function (cookie, key, value, opt) {
+					var _date = new Date(), _domain = opt.domain || "localhost:3000", _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
+					_date.setTime(_date.getTime() + _time_gap);
+					cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
+				},
+				del: function (cookie, key, opt) {
+					var _opt = opt || {};
+					opt.time = -new Date();
+					cookie.set(key, '', opt);
+				}
+			};
+		</script>
         <script type="text/javascript" src="/excel-editor/ext-2.2/adapter/ext/ext-base.js"></script>
         <script type="text/javascript" src="/excel-editor/ext-2.2/ext-all.js"></script>
         <script type="text/javascript" src="/excel-editor/js/6excel.js"></script>
@@ -24,7 +42,7 @@
 	    <script type="text/javascript" src="/javascripts/fileManage.js"></script>
 	    <link rel="stylesheet" type="text/css" href="/stylesheets/fileManage.css">
         <link rel="stylesheet" type="text/css" href="/excel-editor/js/6excel.css">
-		<link rel="stylesheet" href="/public/stylesheets/chat.css"/>
+		<link rel="stylesheet" href="/stylesheets/chat.css"/>
     </head>
     <body id="body" onload="load();">
         <div id="west"></div>
@@ -35,7 +53,11 @@
         <div id="south"></div>
         <div id='chatHeader' class="chatHeader">
             <a id='chatBtn' href="javascript:void(0);" class="chatBtn">聊天</a>
+			&nbsp;
+			<a class="logoutBtn" href="/user/logout" class="chatBtn">退出</a>
         </div>
+		<div id="arrow" class="arrow"></div>
+		<div id="arrow2" class="arrow2"></div>
         <div id='chatContainer' class="chatContainer">
             <div class="chatBanner" >
                 <span class="count">&nbsp;当前协作人数：<span id='chatCount'>0</span></span>
@@ -44,16 +66,31 @@
             <div id='userCount' style=''></div>
             <div class='chatList_div'>
                 <ul id='chatList' class="chatList"></ul>
-yle='margin-left:13px; height:30px; width:370px'></textarea>
-            <button id='sendBtn' style='margin:5px 0 0 13px ;'>发送</button>
             </div>
             <textarea id='chatContent' class="chatContent"></textarea>
             <button id='sendBtn' class="sendBtn">发送</button>
+			<span id="warning" class="warning">内容不能为空</span>
         </div>
         <script type="text/javascript">
         function load(){
-            window.ogID = '' ;
-            window.ogWID = '' ;
+			var online = true;
+			if (navigator.onLine) {
+				if (location.pathname.length > 1 && location.pathname !== '/index.html') {
+					//非新文档
+					doc = new Collaborate();
+				} else {
+					//新文档
+					// if () {
+					//     //读缓存
+					//JsonManager.importCell(mes.data);
+					// }
+				}
+			} else {
+				//读离线缓存
+			}
+
+			window.ogID = '' ;
+			window.ogWID = '' ;
 
             var application = new Bao.Excel(document.body);
             In.add('dragCopy',{path:'/excel-editor/js/dragCopy.js',type:'js',charset:'utf-8'});
@@ -61,20 +98,6 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
                 dragCopy();
             });
 
-            var online = true;
-            if (navigator.onLine) {
-                if (location.pathname.length > 1 && location.pathname !== '/index.html') {
-                    //非新文档
-                    doc = new Collaborate();
-                } else {
-                    //新文档
-                    // if () {
-                    //     //读缓存    
-                    // }
-                }                
-            } else {
-                //读离线缓存
-            }
         }
 
         //非新文档建立链接和聊天工具
@@ -85,11 +108,22 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
             //document info
             this.title = null;
             this.count = null;
+			this.tmpl = '<div class="ActiveRange">' +
+							'<div class="AR_name"></div>' +
+					    	'<div class="AR_inner"></div>' +
+					    '</div>';
 
             //websocket
-            var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\//g,''),
+            var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\/doc\//g,''),
                 socket = new WebSocket(url);
-            
+
+			socket.onopen = function () {
+				me.send({
+					"code" : 5,
+					"data" : document.cookie
+				});
+			};
+
             socket.onmessage = function (message) {
                 console.log(message);
                 console.log(message.data);
@@ -98,30 +132,36 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
                     switch (mes.code) {
                         case 2 : 
                             //成功建立链接
-                            console.log('opened');
-                            me.title = mes.data.title;
+                            console.log('opened with ' + mes.data.count +' people');
                             me.count = mes.data.count;
-                            document.title = me.title;
-                            document.getElementById('chatCount').innerText = me.count;
+                            document.getElementById('chatCount').textContent = me.count;
+							localStorage.setItem('docId', mes.data.id);
                             break;
-                        case 3:
+
+						case 3:
                             //有新的协作者加入
+							console.log('新协作者' + mes.data.userName + '加入');
                             me.count = mes.data.count;
-                            document.getElementById('chatCount').innerText = me.count;
+                            document.getElementById('chatCount').textContent = me.count;
                             break;
+
 						case 4:
                             //编辑状态更新
-
+							console.log(mes.data.userName + '更新了编辑状态');
+							console.log();
                             break;
+
                         case 1 :
                             //文档操作
                             if (mes.data instanceof Object) {
                                 //文档被更新,可直接合并
+								JsonManager.importCell(mes.data);
                             } else {
                                 //编辑成功
 								console.log("同步成功");
                             }
                             break;
+
                         case 0 :
                             //聊天 
                             if (mes.data instanceof Object) {
@@ -131,38 +171,43 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
 								console.log("成功发送聊天信息");
 							}
                             break;
+
                         case -1 :
                             //存在冲突
                             break;
+
                         case -2 :
                             //同步失败,系统出错
 							console.log("服务器同步失败");
 							break;
+
                         case -3 :
                             //参数错误
 							console.log("参数错误");
 							break;
+
                         case -4 :
                             //系统错误
 							console.log("系统错误");
 							break;
+
                         default :
 							break;
                     }
-                }
+                } else {
+					alert("系统出错，请刷新页面");
+				}
             };
 
             socket.onerror = function (e){
+				alert("系统出错，请刷新页面");
                 console.log(e);
             };
 
             //send sth.
             this.send = function (data) {
                 socket.send(JSON.stringify(data));
-            }({
-				code : 5,
-				data : document.cookie
-			});
+            };
 
             //聊天工具
             var chat = {
@@ -175,31 +220,53 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
                         chatList = document.getElementById('chatList'),
                         sendBtn = document.getElementById('sendBtn'),
                         closeBtn = document.getElementById('closeBtn'),
-                        chatContent = document.getElementById('chatContent');
+                        chatContent = document.getElementById('chatContent'),
+						warning = document.getElementById('warning'),
+						arrow = document.getElementById('arrow'),
+						arrow2 = document.getElementById('arrow2');
 
                     //event
                     chatBtn.addEventListener('click', function (e) {
                         e.preventDefault();
-                        if (chatContainer.style.display == 'none') {
-                            chatContainer.style.display = '';
+                        if (chatContainer.style.display != 'block') {
+                            chatContainer.style.display = 'block';
+                            arrow.style.display = 'block';
+							arrow2.style.display = 'block';
                         } else {
                             chatContainer.style.display = 'none';
+							arrow.style.display = 'none';
+							arrow2.style.display = 'none';
                         }
                     }, false);
+
                     closeBtn.addEventListener('click', function (e) {
                         chatContainer.style.display = 'none';
                     });
+
+					chatContent.addEventListener('keydown', function (e) {
+						if (e.ctrlKey && e.keyCode == 13) {
+							sendBtn.click();
+						}
+					});
+
+					var t;
                     sendBtn.addEventListener('click', function (e) {
                         if (chatContent.value !== '') {
                             chat.send(chatContent.value);
                             chatContent.value = '';
                         } else {
                             //内容为空
+							warning.style.display = "inline-block";
+							clearTimeout(t);
+							t = setTimeout(function () {
+								warning.style.display = "none";
+							}, 2500);
                         }
                     });
 
-                    chatHeader.style.display = '';
+                    chatBtn.style.visibility = 'visible';
                 },
+
                 send : function (message) {
                     if (message !== '') {
                         this.createMes(message);
@@ -212,37 +279,26 @@ yle='margin-left:13px; height:30px; width:370px'></textarea>
                         });
                     }
                 },
+
                 recieve : function (message) {
                     if (message != undefined) {
                         this.createMes(decodeURIComponent(message.content), message.userName);
                     }
                 },
+
                 createMes : function (mes, user) {
                     user = user || '我';
                     var newChat = document.createElement('li');
-                    newChat.class = 'chatLi';
+                    newChat.className = 'chatLi';
                     newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + mes;
                     chatList.appendChild(newChat);
                     chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
                 }
             };
-            chat.init();
-        }
 
-		var COOKIE = {
-			get: function(cookie, name) {
-				var ret = cookie.match(new RegExp("(?:^|;\\s)" + name + "=(.*?)(?:;\\s|$)"));
-				return ret ? ret[1] : "";
-			},set: function(cookie, key, value, opt) {
-				var _date = new Date(), _domain = opt.domain || "localhost:3000", _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
-				_date.setTime(_date.getTime() + _time_gap);
-				cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
-			},del: function(cookie, key, opt) {
-				var _opt = opt || {};
-				opt.time = -new Date();
-				cookie.set(key, '', opt);
-			}
-		};
+            chat.init();
+
+        }
         </script>
     </body>
 </html>
