@@ -2218,10 +2218,14 @@ function DiffSelector(){
 	var li0 = document.createElement('li');
 	var li1 = document.createElement('li');
 	var li2 = document.createElement('li');
+	var li3 = document.createElement('li');
+	li3.style.position="absolute";
+	li3.style.border="solid 1px red";
 	li0.innerHTML = '数据冲突啦~请选择最终数据：';
 	self.appendChild(li0);
 	self.appendChild(li1);
 	self.appendChild(li2);
+	self.appendChild(li3);
 	self.construct = function(){
 		this.id = 'diffSelector';
 		this.style.position="absolute";
@@ -2241,10 +2245,14 @@ function DiffSelector(){
 	  };
 	//根据selectorBox的位置刷新本身位置
 	self.fitToRange=function(selectorBox){
+		this.style.visibility="hidden";
 		self.setLeft(selectorBox.offsetLeft+selectorBox.offsetWidth);
 		self.setTop(selectorBox.offsetTop);
 		try{
-		  self.setWidth(selectorBox.offsetWidth);
+		  self.childNodes[3].style.left = '-'+(selectorBox.offsetWidth+2)+'px';
+		  self.childNodes[3].style.top = -2+'px';
+		  self.childNodes[3].style.width = selectorBox.offsetWidth+'px';
+		  self.childNodes[3].style.height = selectorBox.offsetHeight+'px';
 		}
 		catch(e){
 		}
@@ -2255,16 +2263,26 @@ function DiffSelector(){
 		var addressName = json.data.key;
 		var address = application.model.model.namespace.getNameAddress(addressName).start;
 		var localVal = application.model.model.getFormula(address.row,address.col);
-		self.childNodes[1] = '1、其他用户数据：'+'<span>'+json.data.present.f+'</span>';
-		self.childNodes[2] = '2、其他用户数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
+		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+json.data.present.f+'</span>';
+		self.childNodes[2].innerHTML = '2、其他用户数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
 		self.childNodes[1].onclick = function(){
 			var val = this.childNodes[1].innerHTML;
-			grid.cellEditor.setValue(val);
+			application.model.model.setFormula(address.row,address.col,val);
+			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.data.present.f);
+			if(window.doc){
+				var cellData = JsonManager.exportCell(address);
+				doc.send({"code":1,"data":cellData});
+			}
 			self.fire("solveDiff");
 		}
 		self.childNodes[2].onclick = function(){
 			var val = this.childNodes[1].innerHTML;
-			grid.cellEditor.setValue(val);
+			application.model.model.setFormula(address.row,address.col,val);
+			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.data.present.f);
+			if(window.doc){
+				var cellData = JsonManager.exportCell(address);
+				doc.send({"code":1,"data":cellData});
+			 }
 			self.fire("solveDiff");
 		}
 		self.fitToRange(window.grid.cells[address.row][address.col]);
@@ -2275,6 +2293,7 @@ function DiffSelector(){
 function addGridMethods(grid){
 	//chenjiabin,用户选择最终数据
 	grid.diffSelector.on('solveDiff',function(selector){
+		window.model.refresh();
 		selector.setVisible(false);
 	});
   grid.selectorBox.on("EditingMode",function(){
@@ -3306,7 +3325,7 @@ function ExtendModelEvents(self,grid){
 	 
 	  if(window.doc&&activeSheet.getCell(address.row,address.col)){
 		var cellData = JsonManager.exportCell(window.model.activeCell);
-		doc.send({"code":4,"data":cellData});
+		doc.send({"code":1,"data":cellData});
 	  }
       self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件，改变model.activeCell
       self.setSelection(new Range(address));
