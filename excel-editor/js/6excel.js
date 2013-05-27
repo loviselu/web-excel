@@ -2185,7 +2185,10 @@ function SelectorBox(){
     catch(e){
     }
     this.style.visibility="visible";
-	Collaborate.send({"code":4,"data":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}});
+	if(doc){
+		var userName = COOKIE.get(document.cookie,"username");
+		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}}});
+	}
   };
   self.fitToArea=function(area){
     var borderWidth=3;
@@ -3286,6 +3289,12 @@ function ExtendModelEvents(self,grid){
         address.col+=self.viewport.start.col;
       }
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
+	 
+	  if(doc){
+		var cellData = JsonManager.exportCell(window.model.activeCell);
+		doc.send({"code":4,"data":cellData});
+		}
+	  
       self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件，改变model.activeCell
       self.setSelection(new Range(address));
       self.refresh();
