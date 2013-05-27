@@ -1,5 +1,10 @@
 CACHE MANIFEST
 CACHE:
+/javascripts/jquery-1.9.1.js
+/javascripts/template.min.js
+/javascripts/fileManage.js
+/stylesheets/fileManage.css
+/stylesheets/chat.css
 /excel-editor/ext-2.2/resources/css/ext-all.css
 /excel-editor/ext-2.2/adapter/ext/ext-base.js
 /excel-editor/ext-2.2/ext-all.js
@@ -8,7 +13,8 @@ CACHE:
 /excel-editor/js/in-min.js
 /excel-editor/js/6excel.js
 /excel-editor/js/in-min.js
-/excel-editor/index.html
+/images/main_bg_img.gif
+/images/sb_handle.gif
 /themes/6excel/img/icons/saveas-16x16.png
 /excel-editor/js/dragCopy.js
 /themes/6excel/img/icons/pencil-16x16.png
@@ -51,3 +57,8 @@ CACHE:
 /excel-editor/ext-2.2/resources/images/default/shadow.png
 /excel-editor/ext-2.2/resources/images/default/shadow-lr.png
 /excel-editor/ext-2.2/resources/images/default/shadow-c.png
+/themes/6excel/img/icons/open-16x16.png
+/excel-editor/js/6excel.css
+/file/getFileList
+/images/dialogClose.gif
+/excel-editor/ext-2.2/resources/images/default/toolbar/tb-btn-sprite.gif

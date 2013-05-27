@@ -146,7 +146,7 @@
 	border: 1px solid rgb(255, 255, 255);
 	left: 76px; top: 18px;
 }
-.AR_name {
+.AR_name_div {
 	position: absolute;
 	overflow: visible;
 	z-index: 3000;
@@ -156,4 +156,6 @@
 	width: 78px;
 	height: 20px;
 }
-
+.AR_name {
+	font-size: 12px;
+}
