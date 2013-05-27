@@ -3324,8 +3324,7 @@ function ExtendModelEvents(self,grid){
         address.col+=self.viewport.start.col;
       }
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
-	 
-	  if(window.doc&&activeSheet.getCell(address.row,address.col)){
+	  if(window.doc&&activeSheet.getCell(self.activeCell.row,self.activeCell.col)){
 		var cellData = JsonManager.exportCell(window.model.activeCell);
 		doc.send({"code":1,"data":cellData});
 	  }
