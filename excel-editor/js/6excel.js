@@ -2148,6 +2148,7 @@ function SelectorBox(){
   var self=document.createElement("DIV");
   self.construct=function(){
     this.id="ActiveRange";
+	this.lock = 1;
     this.style.position="absolute";
     this.style.overflow="visible";
     WrapStyle(this);
@@ -2185,10 +2186,6 @@ function SelectorBox(){
     catch(e){
     }
     this.style.visibility="visible";
-	if(doc){
-		var userName = COOKIE.get(document.cookie,"username");
-		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}}});
-	}
   };
   self.fitToArea=function(area){
     var borderWidth=3;
@@ -2938,6 +2935,11 @@ function GridModel(grid){
 		cell.setOldFontStyleId(cell.getFontStyleId());
 		cell.setOldFormula(value);
 	}
+	if(window.doc){
+		console.log(1);
+		var userName = COOKIE.get(document.cookie,"username");
+		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}}});
+	}
     self.fire("ActiveCellChanged",value);//value为当前change后的activeCell的值
   };
   //给活动的cell设置formula，并且计算公式结果，dontTrigger表示是否触发事件
@@ -3290,11 +3292,10 @@ function ExtendModelEvents(self,grid){
       }
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
 	 
-	  if(doc){
+	  if(window.doc){
 		var cellData = JsonManager.exportCell(window.model.activeCell);
 		doc.send({"code":4,"data":cellData});
-		}
-	  
+	  }
       self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件，改变model.activeCell
       self.setSelection(new Range(address));
       self.refresh();
