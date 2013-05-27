@@ -43,6 +43,9 @@ $(function(){
 	fileLayout_tmpl += "        <div class=\"item js_setAuth\">设置权限<\/div>";
 	fileLayout_tmpl += "        <div class=\"item js_remove\">移到回收站<\/div>";
 	fileLayout_tmpl += "    <\/div>";
+	fileLayout_tmpl += "    <div class=\"login_in_mask\">";
+	fileLayout_tmpl += "        <a href='\/user\/login'>请先登陆<\/a>";
+	fileLayout_tmpl += "    <\/div>";
 	fileLayout_tmpl += "<\/div>";
 
 	//-------------------------myfiles_item_tmpl---------------------------------------
@@ -157,16 +160,21 @@ $(function(){
 		$('#fileBoard .explorer').height(($(window).height()-124)+'px');
 	});
 
+	var userLogin = true;
+
 	$('#toggleFB').on('click',function(){
 		if($('#fileBoard').is(':visible')){
 			$('#fileBoard').hide();
 			$('#toggleFB').css('left','0');
 			$('#toggleFB .sbCol').toggleClass('sbExp');
-
+			$('#fileLayout .login_in_mask').hide();
 		}else{
 			$('#fileBoard').show();
 			$('#toggleFB').css('left','212px');
 			$('#toggleFB .sbCol').toggleClass('sbExp');
+			if(!userLogin){
+				$('#fileLayout .login_in_mask').show();
+			}
 		}
 	})
 
@@ -178,9 +186,13 @@ $(function(){
 	})
 
 	//加载json数据
+
 	$.getJSON('/file/getFileList',function(data){
-		if(data.code != '0'){
+		if(data.code !== 0){
 			$('#fileBoard .explorer .message').text('加载失败');
+			if(data.code === -2){
+				userLogin = false;
+			}
 			return;
 		}
 
