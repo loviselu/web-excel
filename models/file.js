@@ -9,7 +9,7 @@ var ObjectID = require('mongodb').ObjectID;
  */
 exports.create = function (userId, data, callback) {
 	database.ready(function(db){
-		db.collection('document', function (err, document) {
+		db.collection('file', function (err, document) {
 			data['data'] = data['data'] || {};
 			data['owner'] =  userId;
 			document.insert(data, {w: 1}, function (err, result) {
@@ -40,7 +40,7 @@ exports.create = function (userId, data, callback) {
  */
 exports.get = function (userId, fileId, callback) {
 	database.ready(function(db) {
-		db.collection('document', function (err, collection) {
+		db.collection('file', function (err, collection) {
 			if (typeof fileId === 'string' && fileId.length === 24) {
 				collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 					if (err) {
@@ -87,7 +87,7 @@ exports.get = function (userId, fileId, callback) {
  */
 exports.update = function (userId, fileId, data, callback) {
 	database.ready(function (db) {
-		db.collection('document', function (err, collection) {
+		db.collection('file', function (err, collection) {
 			collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 				if (err) {
 					console.error(err.message);

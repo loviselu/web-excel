@@ -118,7 +118,7 @@ exports.getFileList = function(req,res){
 						res.json({code:-1,message:"数据库出错"});
 						return;
 					}
-					file.find({_id:{"$in":all_file}},{filename:1,owner:1}).toArray(function(err,result){
+					file.find({_id:{"$in":all_file}},{fileName:1,owner:1,in_recyclebin:1}).toArray(function(err,result){
 						if(err){
 							res.json({code:-1,message:"数据库出错"});
 							return;
@@ -162,19 +162,19 @@ exports.rename = function(req,res){
 
 	database.ready(function(db){
 		db.collection('file', function (err, file) {
-			file.findOne({_id:ObjectID(fileID)},{ownerId:true},function(err,result){
+			file.findOne({_id:ObjectID(fileID)},{owner:1},function(err,result){
 				if(err){
 					res.json({'code':-1,message:'数据库出错'});
 					return;
 				}
-				if(result.ownerId !== req.session.userId){
+				if(result.owner !== req.session.userId){
 					res.json({'code':-4,message:'无权限修改'});
 				}else{
 					file.update({_id:ObjectID(fileID)},{'$set':{filename:newName}},function(err,result){
 						if(err){
 							res.json({'code':-1,message:'数据库出错'});
 						}else{
-							res.json({'code':0});
+							res.json({'code':0,message:'修改成功'});
 						}
 					})
 				}
@@ -240,7 +240,33 @@ exports.setAuth = function(req,res){
  *  fileID
  */
 exports.moveToRecycle = function(req,res){
+	var fileID = req.body.fileID;
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
 
+	database.ready(function(db){
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{owner:1},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.owner !== req.session.userId){
+					res.json({'code':-4,message:'无权限修改'});
+				}else{
+					file.update({_id:ObjectID(fileID)},{'$set':{in_recyclebin:true}},function(err,result){
+						if(err){
+							res.json({'code':-1,message:'数据库出错'});
+						}else{
+							res.json({'code':0,message:'修改成功'});
+						}
+					})
+				}
+			})
+		})
+	})
 }
 
 /*
@@ -249,7 +275,33 @@ exports.moveToRecycle = function(req,res){
  *  fileID
  */
 exports.revertRecycle = function(req,res){
+	var fileID = req.body.fileID;
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
 
+	database.ready(function(db){
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{owner:1},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.owner !== req.session.userId){
+					res.json({'code':-4,message:'无权限修改'});
+				}else{
+					file.update({_id:ObjectID(fileID)},{'$set':{in_recyclebin:false}},function(err,result){
+						if(err){
+							res.json({'code':-1,message:'数据库出错'});
+						}else{
+							res.json({'code':0,message:'修改成功'});
+						}
+					})
+				}
+			})
+		})
+	})
 }
 
 /*

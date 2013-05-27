@@ -76,7 +76,7 @@ $(function(){
 	renameDialog_tmpl += "        <\/div>";
 	renameDialog_tmpl += "        <input type='text' class=\"input\" name=\"rename\" \/>";
 	renameDialog_tmpl += "        <div class=\"bottom\">";
-	renameDialog_tmpl += "            <button class='button'>确定<\/button>";
+	renameDialog_tmpl += "            <button class='button js_commit'>确定<\/button>";
 	renameDialog_tmpl += "            <button class='button js_close'>取消<\/button>";
 	renameDialog_tmpl += "        <\/div>";
 	renameDialog_tmpl += "    <\/div>";
@@ -100,7 +100,7 @@ $(function(){
 	shareDialog_tmpl += "       <\/div>";
 	shareDialog_tmpl += "       <textarea class=\"textarea\" name=\"writeable_list\" placeholder=\"输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔...\"><\/textarea>";
 	shareDialog_tmpl += "       <div class=\"bottom\">";
-	shareDialog_tmpl += "	        <button class='button'>确定<\/button>";
+	shareDialog_tmpl += "	        <button class='button js_commit'>确定<\/button>";
 	shareDialog_tmpl += "	        <button class='button js_close'>取消<\/button>";
 	shareDialog_tmpl += "       <\/div>";
 	shareDialog_tmpl += "   <\/div>";
@@ -117,8 +117,7 @@ $(function(){
 	messageDialog_tmpl += "	        <span><%=message%><\/span>";
 	messageDialog_tmpl += "        <\/div>";
 	messageDialog_tmpl += "        <div class=\"bottom\">";
-	messageDialog_tmpl += "            <button class='button'>确定<\/button>";
-	messageDialog_tmpl += "            <button class='button js_close'>取消<\/button>";
+	messageDialog_tmpl += "            <button class='button js_close'>确定<\/button>";
 	messageDialog_tmpl += "        <\/div>";
 	messageDialog_tmpl += "    <\/div>";
 	messageDialog_tmpl += "<\/div>";
@@ -191,7 +190,7 @@ $(function(){
 		}else{
 			$('#fileBoard .my_files .message').hide();
 			for(var i = my_files.length-1;i>=0;i--){
-				$('#fileBoard .my_files').append(my_files_item_tmpl_func({id:my_files[i]._id,name:my_files[i].filename}));
+				$('#fileBoard .my_files').append(my_files_item_tmpl_func({id:my_files[i]._id,name:my_files[i].fileName}));
 			}
 		}
 
@@ -202,7 +201,7 @@ $(function(){
 			$('#fileBoard .share_to_me .message').hide();
 			for(var i = share_to_me.length-1;i>=0;i--){
 				console.log(share_to_me[i]);
-				$('#fileBoard .share_to_me').append(share_to_me_item_tmpl_func({id:share_to_me[i]['_id'],name:share_to_me[i]['filename']}));
+				$('#fileBoard .share_to_me').append(share_to_me_item_tmpl_func({id:share_to_me[i]['_id'],name:share_to_me[i]['fileName']}));
 			}
 		}
 
@@ -212,7 +211,7 @@ $(function(){
 		}else{
 			$('#fileBoard .recyclebin .message').hide();
 			for(var i = recyclebin.length-1;i>=0;i--){
-				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:recyclebin[i]._id,name:recyclebin[i].filename}));
+				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:recyclebin[i]._id,name:recyclebin[i].fileName}));
 			}
 		}
 	})
@@ -239,7 +238,24 @@ $(function(){
 		$('#renameDialog').autoPosition().show();
 	})
 
-	$()
+	$("#renameDialog .js_commit").on('click',function(){
+		var newName = $.trim($("#renameDialog input[name=rename]").val());
+		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
+
+		if(newName === ''){
+			return;
+		}
+
+		//console.log(fileID)
+		$.post('/file/rename',{fileID:fileID,newName:newName},function(data){
+			$('#renameDialog').hide();
+			if(data.code === 0){
+				$('#fileBoard .my_files .activeItem .fileName').text(newName);
+			}else{
+				$.showMessage(data.message,'修改失败');
+			}
+		})
+	})
 
 	//操作-设置权限
 	$('#command_list .js_setAuth').on('click',function(){
@@ -247,9 +263,39 @@ $(function(){
 		$('#shareDialog').autoPosition().show();
 	})
 
+	$("#shareDialog .js_commit").on('click',function(){
+		var newName = $.trim($("#renameDialog input[name=rename]").val());
+		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
+
+		if(newName === ''){
+			return;
+		}
+
+		//console.log(fileID)
+		$.post('/file/setAuth',{fileID:fileID,newName:newName},function(data){
+			$('#renameDialog').hide();
+			if(data.code === 0){
+				$('#fileBoard .my_files .activeItem .fileName').text(newName);
+			}else{
+				$.showMessage(data.message,'修改失败');
+			}
+		})
+	})
+
 	//操作-移到回收桶
 	$('#command_list .js_remove').on('click',function(){
-
+		$('#command_list').hide();
+		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
+		var fileName = $('#fileBoard .my_files .activeItem').text();
+		$.post('/file/moveToRecycle',{fileID:fileID},function(data){
+			if(data.code === 0){
+				$('#fileBoard .recyclebin .message').hide();
+				$('#fileBoard .my_files .activeItem').remove();
+				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:fileID,name:fileName}));
+			}else{
+				$.showMessage(data.message,'删除失败');
+			}
+		})
 	})
 
 
