@@ -112,6 +112,10 @@ exports.getFileList = function(req,res){
 				res.json({code:-1,message:"数据库出错"});
 				return;
 			}
+			if(!req.session.userId){
+				res.json({code:-2,message:"用户未登陆"});
+				return;
+			}
 			user.findOne({_id:ObjectID(req.session.userId)},{my_files:true,share_to_me:true},function(err,result){
 
 				var my_files = [];

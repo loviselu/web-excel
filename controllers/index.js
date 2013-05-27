@@ -14,7 +14,7 @@ exports.routes = [
 ];
 
 exports.index = function (req, res) {
-	if(req.session.userId){
+	if(req.session.userId || req.params.doc){
 		fs.readFile('excel-editor/index.html', 'utf-8', function (err, data) {
 			if (err) {
 				console.error(err.message);

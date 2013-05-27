@@ -49,10 +49,10 @@ exports.get = function (userId, fileId, callback) {
 					if(!result){
 						return callback({code:-4,message:'指定文档不存在'});
 					}
-					if(result.owner !== userId && result.readable_list && (result.readable_list === 'none' || result.readable_list.indexof(userId) === -1) ){
-						return callback({code:-2,message:'无权限访问'});
-					}else{
+					if(result.owner === userId || !result.readable_list || result.readable_list === 'all' || result.readable_list.indexOf(userId) > -1){
 						return callback(null, result);
+					}else{
+						return callback({code:-2,message:'无权限访问'});
 					}
 				});
 
@@ -79,7 +79,7 @@ exports.get = function (userId, fileId, callback) {
  * result格式如下：
  * ｛
  *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在)
- *   "conflict" :["2B","3C"]
+ *   "conflict" :[{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}]
  * ｝
  * @param userId 用户id
  * @param fileId
@@ -99,7 +99,7 @@ exports.update = function (userId, fileId, data, callback) {
 				}
 				if(result.owner === userId || !result.writeable_list || result.writeable_list === 'all' || result.writeable_list.indexof(userId) > -1 ){
 					//检查是否有冲突
-					var conflict = [];
+					var conflict = {};
 					var newData = {};
 					for (var key in data['cell']) {
 
@@ -110,6 +110,8 @@ exports.update = function (userId, fileId, data, callback) {
 							newData[key] = data['cells'][key]['now'];
 						}
 					}
+
+					conflict.push({key:key,present:data['cell'][key]['before']['f']})
 
 					if (conflict.length > 0) {
 						return callback(null, {"code": -1, "conflict": conflict});
