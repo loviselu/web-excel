@@ -566,19 +566,22 @@ function JsonHandler(){
   }
   //chenjiabin，其中fs也导出为一个字符串，与exportFontStyles一致
   self.exportCell = function(address){
-	var json = '{"cell":{"';
-	var addressName = window.model.model.namespace.getRangeName(new Range(address));
-	var cell = window.model.model.getCell(address.row,address.col);
-	var fontStyle = Styler.getFontStyleById(cell.getFontStyleId()).id;
-	var oldFontStyle = Styler.getFontStyleById(cell.getOldFontStyleId()).id;
-	json+=addressName+'":{"old":{';
-	json+='"f":"'+cell.getOldFormula();
-	json+='","fs":"'+cell.getOldFontStyleId()+'|'+oldFontStyle;
-	json+='"},"now":{';
-	json+='"f":"'+cell.getFormula();
-	json+='","fs":"'+cell.getFontStyleId()+'|'+fontStyle;
-	json+='"}}}}';
-	return json;
+	if(activeSheet.getCell(address.row,address.col)){
+		var json = '{"cell":{"';
+		var addressName = window.model.model.namespace.getRangeName(new Range(address));
+		var cell = window.model.model.getCell(address.row,address.col);
+		var fontStyle = Styler.getFontStyleById(cell.getFontStyleId()).id;
+		var oldFontStyle = Styler.getFontStyleById(cell.getOldFontStyleId()).id;
+		json+=addressName+'":{"old":{';
+		json+='"f":"'+cell.getOldFormula();
+		json+='","fs":"'+cell.getOldFontStyleId()+'|'+oldFontStyle;
+		json+='"},"now":{';
+		json+='"f":"'+cell.getFormula();
+		json+='","fs":"'+cell.getFontStyleId()+'|'+fontStyle;
+		json+='"}}}}';
+		return json;
+	}
+	
   }
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
   self.importCell =function(data){
@@ -2212,6 +2215,13 @@ function SelectorBox(){
 //chenjiabin,添加一个选择域，当出现冲突时弹出供用户选择
 function DiffSelector(){
 	var self=document.createElement("ul");
+	var li0 = document.createElement('li');
+	var li1 = document.createElement('li');
+	var li2 = document.createElement('li');
+	li0.innerHTML = '数据冲突啦~请选择最终数据：';
+	self.appendChild(li0);
+	self.appendChild(li1);
+	self.appendChild(li2);
 	self.construct = function(){
 		this.id = 'diffSelector';
 		this.style.position="absolute";
@@ -2240,22 +2250,24 @@ function DiffSelector(){
 		}
 		this.style.visibility="visible";
 	  };
-	 self.addContent=function(arr){
-		var childs = self.childNodes;
-		for(var i = childs.length - 1; i >= 0; i--){  
-			alert(childs[i].nodeName);  
-			self.removeChild(childs[i]);  
-		}  
-		for(i= 0;i<arr.length;i++){
-			var li = document.createElement('li');
-			li.innerHTML = arr[i];		//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
-			li.onclick = function(){
-				var val = this.innerHTML;
-				grid.cellEditor.setValue(val);
-				self.fire("solveDiff");
-			}
-			self.appendChild(li);
+	 self.addContent=function(response){
+		var json = JSON.parse(response);
+		var addressName = json.data.key;
+		var address = application.model.model.namespace.getNameAddress(addressName).start;
+		var localVal = application.model.model.getFormula(address.row,address.col);
+		self.childNodes[1] = '1、其他用户数据：'+'<span>'+json.data.present.f+'</span>';
+		self.childNodes[2] = '2、其他用户数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
+		self.childNodes[1].onclick = function(){
+			var val = this.childNodes[1].innerHTML;
+			grid.cellEditor.setValue(val);
+			self.fire("solveDiff");
 		}
+		self.childNodes[2].onclick = function(){
+			var val = this.childNodes[1].innerHTML;
+			grid.cellEditor.setValue(val);
+			self.fire("solveDiff");
+		}
+		self.fitToRange(window.grid.cells[address.row][address.col]);
 	 }
 	self.construct();
 	return self;
@@ -2936,9 +2948,9 @@ function GridModel(grid){
 		cell.setOldFormula(value);
 	}
 	if(window.doc){
-		console.log(1);
+		var cellTd = window.grid.cells[address.row][address.col]
 		var userName = COOKIE.get(document.cookie,"username");
-		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":range.offsetLeft,"offsetTop":range.offsetTop}}});
+		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":cellTd.offsetLeft,"offsetTop":cellTd.offsetTop}}});
 	}
     self.fire("ActiveCellChanged",value);//value为当前change后的activeCell的值
   };
@@ -3292,7 +3304,7 @@ function ExtendModelEvents(self,grid){
       }
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
 	 
-	  if(window.doc){
+	  if(window.doc&&activeSheet.getCell(address.row,address.col)){
 		var cellData = JsonManager.exportCell(window.model.activeCell);
 		doc.send({"code":4,"data":cellData});
 	  }
