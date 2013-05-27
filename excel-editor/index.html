@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html manifest="/excel-editor/web_excel.manifest">
+<html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>new excel document</title>
@@ -32,6 +32,27 @@
 					cookie.set(key, '', opt);
 				}
 			};
+			function AJAX() {
+				if (typeof XMLHttpRequest != "undefined") {
+					return new XMLHttpRequest();
+				} else if (typeof ActiveXObject != "undefined") {
+					if (typeof arguments.callee.activeXString != "string") {
+						var versions = ["MSXML2.XMLHttp.6.0", "MSXML2.XMLHttp.3.0", "MSXML2.XMLHttp"];
+						for (var i = 0, len = versions.length; i < len; i++) {
+							try {
+								var xhr = new ActiveXObject(versions[i]);
+								arguments.callee.activeXString = versions[i];
+								return xhr;
+							} catch (ex) {
+								//不支持
+							}
+						}
+					}
+					return new ActiveXObject(arguments.callee.activeXString);
+				} else {
+					throw new Error("错误");
+				}
+			}
 		</script>
         <script type="text/javascript" src="/excel-editor/ext-2.2/adapter/ext/ext-base.js"></script>
         <script type="text/javascript" src="/excel-editor/ext-2.2/ext-all.js"></script>
@@ -131,6 +152,7 @@
                 console.log(message);
                 console.log(message.data);
                 var mes = JSON.parse(message.data);
+				console.log(mes);
                 if (mes.code != undefined) {
                     switch (mes.code) {
                         case 2 :
@@ -210,6 +232,9 @@
 
             //send sth.
             this.send = function (data) {
+				if (data.code == 1) {
+					data.data = JSON.parse(data.data);
+				}
                 socket.send(JSON.stringify(data));
             };
 

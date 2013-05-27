@@ -17,6 +17,8 @@ CACHE:
 /images/sb_handle.gif
 /themes/6excel/img/icons/saveas-16x16.png
 /excel-editor/js/dragCopy.js
+/excel-editor/themes/6excel/img/icons/close.png
+/excel-editor/ext-2.2/resources/images/default/toolbar/tb-btn-sprite.gif
 /themes/6excel/img/icons/pencil-16x16.png
 /themes/6excel/img/icons/new-16x16.png
 /themes/6excel/img/icons/refresh-16x16.png
@@ -61,4 +63,3 @@ CACHE:
 /excel-editor/js/6excel.css
 /file/getFileList
 /images/dialogClose.gif
-/excel-editor/ext-2.2/resources/images/default/toolbar/tb-btn-sprite.gif

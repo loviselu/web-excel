@@ -97,21 +97,21 @@ exports.update = function (userId, fileId, data, callback) {
 				if (!result) {
 					return callback(null,{code:-4,message:'指定文档不存在'});
 				}
-				if(result.owner === userId || !result.writeable_list || result.writeable_list === 'all' || result.writeable_list.indexof(userId) > -1 ){
+				if(result.owner === userId || !result.writeable_list || result.writeable_list === 'all' || result.writeable_list.indexOf(userId) > -1 ){
 					//检查是否有冲突
 					var conflict = {};
 					var newData = {};
 					for (var key in data['cell']) {
 
 						//冲突判断只判断单元格的值f
-						if (result['data']['cells'][key] && data['cell'][key]['before']['f'] !== result['data']['cells'][key]['f']) {
+						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['before']['f'] !== result['data']['cells'][key]['f']) {
 							conflict.push(key);
 						}else{
-							newData[key] = data['cells'][key]['now'];
+							newData[key] = data['cell'][key]['now'];
 						}
 					}
 
-					conflict.push({key:key,present:data['cell'][key]['before']['f']})
+					conflict.push({key:key,present:data['cell'][key]['before']['f']});
 
 					if (conflict.length > 0) {
 						return callback(null, {"code": -1, "conflict": conflict});
@@ -119,7 +119,7 @@ exports.update = function (userId, fileId, data, callback) {
 
 					var update = {};
 					for (var key in newData) {
-						update['data.cells.'+key] = newData[key]
+						update['data.cells.'+key] = newData[key];
 					}
 
 					collection.update({_id: new ObjectID(fileId)}, {$set:update}, {w: 1}, function (err, result) {

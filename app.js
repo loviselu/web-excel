@@ -121,8 +121,8 @@ wss.on('connection', function (socket) {
 	socket.on('message', function (message) {
 		var user;
 
-		if (this.userName == undefined) {
-			user = this.id;
+		if (this.userName == '' || this.userName == undefined) {
+			user = '游客' + this.id;
 		}
 		else {
 			user = this.userName;
@@ -147,19 +147,31 @@ wss.on('connection', function (socket) {
 					break;
 
 				case 1 :
-					db.update(socket.userId, message.data, function (err, data) {
+					db.update(socket.userId, docID, message.data, function (err, data) {
 						if (err) {
 							console.error(err.message);
 							socket.send('{"code" : -2, error : "同步失败"}');
 						} else {
 							console.log(JSON.stringify(data, null, 4));
-							if (data.code == -1) {
-								//冲突
-								socket.send(JSON.stringify({"code" : -1, "data" : data}));
-							} else {
-								//文档更新广播
-								socket.send('{"code" : 1}');
-								broadcast(socket, doc, JSON.stringify(data));
+							switch (data.code) {
+								case -1 :
+									//冲突
+									socket.send(JSON.stringify({"code" : -1, "data" : data}));
+									break;
+
+								case -2 :
+									//数据库错误
+									break;
+
+								case -3 :
+									//没有权限
+									break;
+
+								case 1 :
+									//文档更新广播
+									socket.send('{"code" : 1}');
+									broadcast(socket, doc, JSON.stringify(data));
+									break;
 							}
 						}
 					});
@@ -171,7 +183,7 @@ wss.on('connection', function (socket) {
 
 				case 5 :
 					//首次登陆获取用户信息
-					socket.userName = COOKIE.get(message.data, "username");
+					socket.userName = COOKIE.get(message.data, "username") || ("游客" + socket.id);
 					socket.userId = COOKIE.get(message.data, "userId");
 					socket.send(JSON.stringify({"code": 2, "data": {"id" : docID, "count": doc.length - 1}}));
 					broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
@@ -204,9 +216,9 @@ wss.on('connection', function (socket) {
 
 			var temp = [];
 
-			for (var i = 0, l = doc.length; i < l; i++) {
-				if (doc[i] != undefined) {
-					temp.push(doc[i]);
+			for (var i = 0, l = doc.socketList.length; i < l; i++) {
+				if (doc.socketList[i] != undefined) {
+					temp.push(doc.socketList[i]);
 				}
 			}
 
