@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html manifest="/excel-editor/web_excel.manifest">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>new excel document</title>
@@ -109,7 +109,9 @@
             this.title = null;
             this.count = null;
 			this.tmpl = '<div class="ActiveRange">' +
-							'<div class="AR_name"></div>' +
+							'<div class="AR_name_div">' +
+								'<span class="AR_name"></span>' +
+							' </div>' +
 					    	'<div class="AR_inner"></div>' +
 					    '</div>';
 
@@ -130,7 +132,7 @@
                 var mes = JSON.parse(message.data);
                 if (mes.code != undefined) {
                     switch (mes.code) {
-                        case 2 : 
+                        case 2 :
                             //成功建立链接
                             console.log('opened with ' + mes.data.count +' people');
                             me.count = mes.data.count;
@@ -163,7 +165,7 @@
                             break;
 
                         case 0 :
-                            //聊天 
+                            //聊天
                             if (mes.data instanceof Object) {
                                 chat.recieve(mes.data);
                             } else {
@@ -174,7 +176,8 @@
 
                         case -1 :
                             //存在冲突
-                            break;
+							grid.diffSelector.addContent(mes.data);
+							break;
 
                         case -2 :
                             //同步失败,系统出错

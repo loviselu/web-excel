@@ -42,14 +42,18 @@ controllers.forEach(function (v) {
 wss.on('connection', function (socket) {
 	//获取文档名
 	var docID = socket.upgradeReq.url.slice(1) || 'test';
+
 	//创建新链接管理或加入socket列表
 	if (docID != '' && connections[docID] instanceof Object) {
 		connections[docID].length++;
-	} else {
+	}
+	else {
 		connections[docID] = {};
 		connections[docID].socketList = [];
 		connections[docID].length = 1;
 	}
+
+	//付给连接id值
 	var doc = connections[docID];
 	socket.id = doc.socketList.push(socket) - 1;
 	console.log(connections);
@@ -116,18 +120,23 @@ wss.on('connection', function (socket) {
 	 */
 	socket.on('message', function (message) {
 		var user;
+
 		if (this.userName == undefined) {
 			user = this.id;
-		} else {
+		}
+		else {
 			user = this.userName;
 		}
 		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + user);
+
 		try {
 			message = JSON.parse(message);
-		} catch (e) {
+		}
+		catch (e) {
 			console.log(e);
 			socket.send('{"code" : -3, error : "参数错误"}');
 		}
+
 		if (message.code != undefined) {
 			switch (message.code) {
 				case 0 :
@@ -173,16 +182,41 @@ wss.on('connection', function (socket) {
 					break;
 			}
 		}
+		else {
+			socket.send('{"code" : -4, "error" : "系统错误"}');
+		}
 	});
 
 	socket.on('close', function () {
+
 		--doc.length;
+
 		if (doc.length === 0) {
 			delete connections[docID];
-		} else {
+		}
+		else {
 			console.log("connection closed; User: " + socket.userName);
 			doc.socketList[this.id] = undefined;
 		}
+
+		//清除undefined
+		if (doc.length != doc.socketList.length) {
+
+			var temp = [];
+
+			for (var i = 0, l = doc.length; i < l; i++) {
+				if (doc[i] != undefined) {
+					temp.push(doc[i]);
+				}
+			}
+
+			for (i = 0, l = temp.length; i < l; i++) {
+				temp[i].id = i;
+			}
+
+			doc.socketList = temp;
+		}
+
 		console.log(connections);
 	});
 
