@@ -273,6 +273,7 @@ exports.setAuth = function(req,res){
 										result = result.map(function(v){
 											return v._id;
 										})
+										user.update({_id:{$in:result,$ne:req.session.userId}},{$addToSet:{share_to_me:fileID}},function(err,rusult){});
 										deferRead.resolve(result);
 									}else{
 										deferRead.resolve('none');
@@ -309,6 +310,8 @@ exports.setAuth = function(req,res){
 										result = result.map(function(v){
 											return v._id;
 										})
+										//设置共享文档
+										user.update({_id:{$in:result,$ne:req.session.userId}},{$addToSet:{share_to_me:fileID}},function(err,rusult){});
 										deferWrite.resolve(result);
 									}else{
 										deferWrite.resolve('none');
@@ -399,7 +402,24 @@ exports.revertRecycle = function(req,res){
  *  fileID
  */
 exports.removeShareFile = function(req,res){
+	var fileID = req.body.fileID;
 
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
+
+	database.ready(function(db){
+		db.collection('user', function (err, user) {
+			user.update({_id:ObjectID(req.session.userId)},{$pull:{share_to_me:fileID}},function(err){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'})
+				}else{
+					res.json({'code':0,message:'删除成功'});
+				}
+			})
+		})
+	})
 }
 
 
@@ -429,7 +449,15 @@ exports.remove = function(req,res){
 						if(err){
 							res.json({'code':-1,message:'数据库出错'});
 						}else{
-							res.json({'code':0,message:'删除成功'});
+							db.collection('user', function (err, user) {
+								user.update({_id:ObjectID(req.session.userId)},{$pull:{my_files:fileID}},function(err){
+									if(err){
+										res.json({'code':-1,message:'数据库出错'})
+									}else{
+										res.json({'code':0,message:'删除成功'});
+									}
+								})
+							})
 						}
 					})
 				}

@@ -47,19 +47,19 @@ $(function(){
 
 	//-------------------------myfiles_item_tmpl---------------------------------------
 	myfiles_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
-	myfiles_item_tmpl += "    <a class=\"fileName\" href=\"\\doc\\<%=id%>\"><%=name%><\/a>";
+	myfiles_item_tmpl += "    <a class=\"fileName\" href=\"/doc/<%=id%>\"><%=name%><\/a>";
 	myfiles_item_tmpl += "    <span class=\"fi_icon_command\"><\/span>";
 	myfiles_item_tmpl += "<\/div>";
 
 	//-------------------------share_to_me_item_tmpl---------------------------------------
 	share_to_me_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
-	share_to_me_item_tmpl += "    <a class=\"fileName\" href=\"\\doc\\<%=id%>\"><%=name%><\/a>";
+	share_to_me_item_tmpl += "    <a class=\"fileName\" href=\"/doc/<%=id%>\"><%=name%><\/a>";
 	share_to_me_item_tmpl += "    <span class=\"fi_icon_delete\" title=\"删除显示\"><\/span>";
 	share_to_me_item_tmpl += "<\/div>";
 
 	//-------------------------recyclebin_item_tmpl---------------------------------------
 	recyclebin_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
-	recyclebin_item_tmpl += "    <a class=\"fileName\" href=\"\\doc\\<%=id%>\"><%=name%><\/a>";
+	recyclebin_item_tmpl += "    <a class=\"fileName\" href=\"/doc/<%=id%>\"><%=name%><\/a>";
 	recyclebin_item_tmpl += "    <span class=\"fi_icon_revert js_revert\" title=\"恢复文件\"><\/span>";
 	recyclebin_item_tmpl += "    <span class=\"fi_icon_delete js_delete\" title=\"彻底删除文件\"><\/span>";
 	recyclebin_item_tmpl += "<\/div>";
