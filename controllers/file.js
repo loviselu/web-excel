@@ -47,6 +47,12 @@ exports.routes = [
 		'method': 'post',
 		'handler': 'revertRecycle'
 	}
+	,
+	{
+		'pattern': '/file/remove',
+		'method': 'post',
+		'handler': 'remove'
+	}
 ];
 
 /*
@@ -170,7 +176,7 @@ exports.rename = function(req,res){
 				if(result.owner !== req.session.userId){
 					res.json({'code':-4,message:'无权限修改'});
 				}else{
-					file.update({_id:ObjectID(fileID)},{'$set':{filename:newName}},function(err,result){
+					file.update({_id:ObjectID(fileID)},{'$set':{fileName:newName}},function(err,result){
 						if(err){
 							res.json({'code':-1,message:'数据库出错'});
 						}else{
@@ -189,14 +195,16 @@ exports.rename = function(req,res){
  *  fileID
  *  readList
  *  writeList
+ *  allCanRead
+ *  allCanWrite
  */
 exports.setAuth = function(req,res){
 	var fileID = req.body.fileID,
 		readList =  req.body.readList,
-		allCanRead =  req.body.allCanRead,
+		allCanRead =  req.body.allCanRead === 'true',
 		writeList =  req.body.writeList,
-		allCanWrite =  req.body.allCanWrite,
-		deferAll = Deferred();
+		allCanWrite =  req.body.allCanWrite === 'true',
+		undefined;
 
 
 	if(!fileID && fileID.length !== 24 ){
@@ -205,15 +213,27 @@ exports.setAuth = function(req,res){
 	}
 	database.ready(function(db){
 		db.collection('file', function (err, file) {
-			file.findOne({_id:ObjectID(fileID)},{ownerId:true},function(err,result){
+			file.findOne({_id:ObjectID(fileID)},{owner:true},function(err,result){
 				if(err){
 					res.json({'code':-1,message:'数据库出错'});
 					return;
 				}
-				if(result.ownerId !== req.session.userId){
+
+				if(result.owner !== req.session.userId){
 					res.json({'code':-4,message:'无权限修改'});
 				}else{
-					deferAll.done(function(change){
+					var deferRead = Deferred(),
+						deferWrite = Deferred();
+
+					Deferred.when(deferRead,deferWrite).done(function(readResult,writeResutl){
+						console.log(readResult)
+						console.log(writeResutl)
+						var change = {
+							$set:{
+								'writeable_list': writeResutl,
+								'readable_list' : readResult
+							}
+						}
 						file.update({_id:ObjectID(fileID)},change,function(err,result){
 							if(err){
 								res.json({'code':-1,message:'数据库出错'});
@@ -221,12 +241,81 @@ exports.setAuth = function(req,res){
 								res.json({'code':0});
 							}
 						})
+					}).fail(function(){
+						res.json({'code':-1,message:'数据库出错'});
 					})
-					if(allCanRead && allCanWrite){
-						deferAll.resolve({'$set':{readable_list:'all',writeable_list:'all'}});
+
+					//处理读权限
+					if(allCanRead){
+						deferRead.resolve('all')
+					}else if(readList === ''){
+						deferRead.resolve('none')
 					}else{
-						//todo 完善权限设置
-						deferAll.resolve({'$set':{readable_list:'all',writeable_list:'all'}});
+						readList = readList.split(',');
+						console.log(readList);
+						db.collection('user', function (err, user) {
+							var where = {
+								$or:[
+									{username:{
+										$in:readList
+									}},
+									{email:{
+										$in:readList
+									}}
+								]
+							}
+							user.find(where,{_id:true}).toArray(function(err,result){
+								if(err){
+									deferRead.reject();
+								}else{
+									console.log(result);
+									if(result.length > 0){
+										result = result.map(function(v){
+											return v._id;
+										})
+										deferRead.resolve(result);
+									}else{
+										deferRead.resolve('none');
+									}
+								}
+							})
+						})
+					}
+					//处理写权限
+					if(allCanWrite){
+						deferWrite.resolve('all')
+					}else if(writeList === ''){
+						deferWrite.resolve('none')
+					}else{
+						writeList = writeList.split(',');
+						console.log(writeList);
+						db.collection('user', function (err, user) {
+							var where = {
+								$or:[
+									{username:{
+										$in:writeList
+									}},
+									{email:{
+										$in:writeList
+									}}
+								]
+							}
+							user.find(where,{_id:true}).toArray(function(err,result){
+								if(err){
+									deferWrite.reject();
+								}else{
+									console.log(result);
+									if(result.length > 0){
+										result = result.map(function(v){
+											return v._id;
+										})
+										deferWrite.resolve(result);
+									}else{
+										deferWrite.resolve('none');
+									}
+								}
+							})
+						})
 					}
 				}
 			})
@@ -320,5 +409,31 @@ exports.removeShareFile = function(req,res){
  *  fileID
  */
 exports.remove = function(req,res){
+	var fileID = req.body.fileID;
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
 
+	database.ready(function(db){
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{owner:1},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.owner !== req.session.userId){
+					res.json({'code':-4,message:'无权限修改'});
+				}else{
+					file.remove({_id:ObjectID(fileID)},function(err,result){
+						if(err){
+							res.json({'code':-1,message:'数据库出错'});
+						}else{
+							res.json({'code':0,message:'删除成功'});
+						}
+					})
+				}
+			})
+		})
+	})
 }

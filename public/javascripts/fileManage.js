@@ -60,8 +60,8 @@ $(function(){
 	//-------------------------recyclebin_item_tmpl---------------------------------------
 	recyclebin_item_tmpl += "<div class=\"item\" data-fileId=\"<%=id%>\">";
 	recyclebin_item_tmpl += "    <a class=\"fileName\" href=\"\\doc\\<%=id%>\"><%=name%><\/a>";
-	recyclebin_item_tmpl += "    <span class=\"fi_icon_revert\" title=\"恢复文件\"><\/span>";
-	recyclebin_item_tmpl += "    <span class=\"fi_icon_delete\" title=\"彻底删除文件\"><\/span>";
+	recyclebin_item_tmpl += "    <span class=\"fi_icon_revert js_revert\" title=\"恢复文件\"><\/span>";
+	recyclebin_item_tmpl += "    <span class=\"fi_icon_delete js_delete\" title=\"彻底删除文件\"><\/span>";
 	recyclebin_item_tmpl += "<\/div>";
 
 	//-------------------------------renameDialog_tmpl----------------------------------------------
@@ -91,14 +91,14 @@ $(function(){
 	shareDialog_tmpl += "   <div class=\"body\">";
 	shareDialog_tmpl += "       <div class=\"title\">";
 	shareDialog_tmpl += "	        <span>只读用户:<\/span>";
-	shareDialog_tmpl += "	        <span class=\"gray\">( 所有人可读 <input type='checkbox' \/> )<\/span>";
+	shareDialog_tmpl += "	        <span class=\"gray\">( 所有人可读 <input type='checkbox' name='allCanRead' \/> )<\/span>";
 	shareDialog_tmpl += "       <\/div>";
-	shareDialog_tmpl += "       <textarea class=\"textarea\" name=\"readable_list\" placeholder=\"输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔...\"><\/textarea>";
+	shareDialog_tmpl += "       <textarea class=\"textarea\" name=\"readList\" placeholder=\"输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔...\"><\/textarea>";
 	shareDialog_tmpl += "       <div class=\"title\">";
 	shareDialog_tmpl += "	        <span>可读\/写用户:<\/span>";
-	shareDialog_tmpl += "	        <span class=\"gray\">( 所有人可读\/写 <input type='checkbox' \/> )<\/span>";
+	shareDialog_tmpl += "	        <span class=\"gray\">( 所有人可读\/写 <input type='checkbox' name='allCanWrite' \/> )<\/span>";
 	shareDialog_tmpl += "       <\/div>";
-	shareDialog_tmpl += "       <textarea class=\"textarea\" name=\"writeable_list\" placeholder=\"输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔...\"><\/textarea>";
+	shareDialog_tmpl += "       <textarea class=\"textarea\" name=\"writeList\" placeholder=\"输入联系人的名称或者邮件地址，多个名称或地址之间请用英文逗号分隔...\"><\/textarea>";
 	shareDialog_tmpl += "       <div class=\"bottom\">";
 	shareDialog_tmpl += "	        <button class='button js_commit'>确定<\/button>";
 	shareDialog_tmpl += "	        <button class='button js_close'>取消<\/button>";
@@ -184,10 +184,10 @@ $(function(){
 			return;
 		}
 
+		$('#fileBoard .message').text('暂无文件');
+
 		var my_files = data.data.my_files;
-		if(my_files.length === 0){
-			$('#fileBoard .my_files .message').text('暂无文件');
-		}else{
+		if(my_files.length >0){
 			$('#fileBoard .my_files .message').hide();
 			for(var i = my_files.length-1;i>=0;i--){
 				$('#fileBoard .my_files').append(my_files_item_tmpl_func({id:my_files[i]._id,name:my_files[i].fileName}));
@@ -195,9 +195,7 @@ $(function(){
 		}
 
 		var share_to_me = data.data.share_to_me;
-		if(share_to_me.length === 0){
-			$('#fileBoard .share_to_me .message').text('暂无文件');
-		}else{
+		if(share_to_me.length >0){
 			$('#fileBoard .share_to_me .message').hide();
 			for(var i = share_to_me.length-1;i>=0;i--){
 				console.log(share_to_me[i]);
@@ -206,9 +204,7 @@ $(function(){
 		}
 
 		var recyclebin = data.data.recyclebin;
-		if(recyclebin.length === 0){
-			$('#fileBoard .recyclebin .message').text('暂无文件');
-		}else{
+		if(recyclebin.length >0){
 			$('#fileBoard .recyclebin .message').hide();
 			for(var i = recyclebin.length-1;i>=0;i--){
 				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:recyclebin[i]._id,name:recyclebin[i].fileName}));
@@ -216,7 +212,7 @@ $(function(){
 		}
 	})
 
-	//操作按钮点击
+	//我的文件-操作按钮点击
 	$('#fileBoard .my_files').on('click','.fi_icon_command',function(){
 
 		$('#fileBoard .my_files .item').removeClass('activeItem');
@@ -232,12 +228,13 @@ $(function(){
 		})
 	});
 
-	//操作-重命名
+	//我的文件-操作-重命名
 	$('#command_list .js_rename').on('click',function(){
 		$('#command_list').hide();
 		$('#renameDialog').autoPosition().show();
 	})
 
+	//重命名弹窗确认按钮
 	$("#renameDialog .js_commit").on('click',function(){
 		var newName = $.trim($("#renameDialog input[name=rename]").val());
 		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
@@ -263,19 +260,29 @@ $(function(){
 		$('#shareDialog').autoPosition().show();
 	})
 
+	//权限设定弹窗确定按钮
 	$("#shareDialog .js_commit").on('click',function(){
-		var newName = $.trim($("#renameDialog input[name=rename]").val());
-		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
 
-		if(newName === ''){
-			return;
-		}
+		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
+		var readList =  $("#shareDialog textarea[name=readList]").val();
+		var allCanRead =  $("#shareDialog input[name=allCanRead]").is(":checked");
+		var writeList =  $("#shareDialog textarea[name=writeList]").val();
+		var allCanWrite = $("#shareDialog input[name=allCanWrite]").is(":checked");
+
 
 		//console.log(fileID)
-		$.post('/file/setAuth',{fileID:fileID,newName:newName},function(data){
-			$('#renameDialog').hide();
+		var data = {
+			fileID:fileID,
+			readList:readList,
+			allCanRead:allCanRead,
+			writeList:writeList,
+			allCanWrite:allCanWrite
+		}
+
+		$.post('/file/setAuth',data,function(data){
+			$('#shareDialog').hide();
 			if(data.code === 0){
-				$('#fileBoard .my_files .activeItem .fileName').text(newName);
+				$.showMessage('修改成功');
 			}else{
 				$.showMessage(data.message,'修改失败');
 			}
@@ -289,8 +296,11 @@ $(function(){
 		var fileName = $('#fileBoard .my_files .activeItem').text();
 		$.post('/file/moveToRecycle',{fileID:fileID},function(data){
 			if(data.code === 0){
-				$('#fileBoard .recyclebin .message').hide();
 				$('#fileBoard .my_files .activeItem').remove();
+				$('#fileBoard .recyclebin .message').hide();
+				if($('#fileBoard .my_files').children().length === 1){
+					$('#fileBoard .my_files .message').show();
+				}
 				$('#fileBoard .recyclebin').append(recyclebin_item_tmpl_func({id:fileID,name:fileName}));
 			}else{
 				$.showMessage(data.message,'删除失败');
@@ -298,8 +308,44 @@ $(function(){
 		})
 	})
 
+	//回收桶-撤回
+	$('#fileBoard .recyclebin').on('click','.js_revert',function(){
 
+		var thatItem = $(this).closest('.item');
+		var fileID = thatItem.data('fileid');
+		var fileName = thatItem.text();
 
+		$.post('/file/revertRecycle',{fileID:fileID},function(data){
+			if(data.code === 0){
+				thatItem.remove();
+				$('#fileBoard .my_files .message').hide();
+				if($('#fileBoard .recyclebin').children().length === 1){
+					$('#fileBoard .recyclebin .message').show();
+				}
+				$('#fileBoard .my_files').append(my_files_item_tmpl_func({id:fileID,name:fileName}));
 
+			}else{
+				$.showMessage(data.message,'撤回失败');
+			}
+		})
+	});
 
+	//回收桶-彻底删除
+	$('#fileBoard .recyclebin').on('click','.js_delete',function(){
+
+		var thatItem = $(this).closest('.item');
+		var fileID = thatItem.data('fileid');
+		var fileName = thatItem.text();
+
+		$.post('/file/remove',{fileID:fileID},function(data){
+			if(data.code === 0){
+				thatItem.remove();
+				if($('#fileBoard .recyclebin').children().length === 1){
+					$('#fileBoard .recyclebin .message').show();
+				}
+			}else{
+				$.showMessage(data.message,'删除失败');
+			}
+		})
+	});
 })
