@@ -4,6 +4,22 @@
 	top: 25px;
 	bottom:17px;
 }
+#fileLayout .login_in_mask{
+	display: none;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	background: gray;
+	opacity: 0.6;
+}
+#fileLayout .login_in_mask a{
+	position: relative;
+	top: 48%;
+	left: 31%;
+	color: blue;
+	font-size: 16px;
+}
 #fileBoard{
 	width: 210px;
 	height: 100%;
@@ -98,6 +114,7 @@
 	font-size: 12px;
 	margin: 5px;
 }
+
 #toggleFB .sbCol {
 	background-image: url(../images/main_bg_img.gif);
 	background-position: -51px -50px;
