@@ -67,17 +67,18 @@ exports.get = function (userId, fileId, callback) {
  * 更新文档，如果有冲突则提示
  *
  * 其中data格式如下：
- * ｛
- *    "2B":
+ * {"cell":
+ *  {"A1":
  *      {
- *          "before":{"value":"123","fomula":"sdfsd"},
- *          "now":{"value":"123","fomula":"sdfsd"}
+ *      "old":{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"},
+ *      "now":{"f":"单元格1","fs":"1|1|10|#000000|false|false|false|left|bottom"}
  *      }
+ *   }
  *  }
  *
  * result格式如下：
  * ｛
- *   "code": -1 (0表示成功，-1表示有冲突)
+ *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在)
  *   "conflict" :["2B","3C"]
  * ｝
  * @param userId 用户id
@@ -88,44 +89,47 @@ exports.get = function (userId, fileId, callback) {
 exports.update = function (userId, fileId, data, callback) {
 	database.ready(function (db) {
 		db.collection('file', function (err, collection) {
-			collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
+			collection.findOne({_id: new ObjectID(fileId)},{owner:1,writeable_list:1,data:1}, function (err, result) {
 				if (err) {
 					console.error(err.message);
-					return callback({code:-1,message:'数据库出错'});
+					return callback(err,{code:-2,message:'数据库出错'});
 				}
 				if (!result) {
-					return callback({code:-4,message:'指定文档不存在'});
+					return callback(null,{code:-4,message:'指定文档不存在'});
 				}
-				if(result.owner !== userId && result.writeable_list && (result.writeable_list === 'none' || result.writeable_list.indexof(userId) === -1) ){
-					return callback({code:-2,message:'无写权限'});
-				}
-				//检查是否有冲突
-				var conflict = [];
-				var newData = {};
-				for (var key in data) {
-					var flag = true;
-					for (var prop in data[key]) {
-						if (result['data'][key][prop] && data[key]['before'][prop] !== result['data'][key][prop]) {
+				if(result.owner === userId || !result.writeable_list || result.writeable_list === 'all' || result.writeable_list.indexof(userId) > -1 ){
+					//检查是否有冲突
+					var conflict = [];
+					var newData = {};
+					for (var key in data['cell']) {
+
+						//冲突判断只判断单元格的值f
+						if (result['data']['cells'][key] && data['cell'][key]['before']['f'] !== result['data']['cells'][key]['f']) {
 							conflict.push(key);
-							flag = false;
-							break;
+						}else{
+							newData[key] = data['cells'][key]['now'];
 						}
 					}
-					if (flag) {
-						newData[key] = data[key]['now'];
-					}
-				}
-				if (conflict.length > 0) {
-					return callback(null, {"code": -1, "conflict": conflict});
-				}
 
-				collection.update({_id: new ObjectID(id)}, {'data': newData}, {w: 1}, function (err, result) {
-					if (err) {
-						console.error(err.message);
-						return callback({code:-1,message:'数据库出错'});
+					if (conflict.length > 0) {
+						return callback(null, {"code": -1, "conflict": conflict});
 					}
-					return callback(null, {"code": 0});
-				})
+
+					var update = {};
+					for (var key in newData) {
+						update['data.cells.'+key] = newData[key]
+					}
+
+					collection.update({_id: new ObjectID(fileId)}, {$set:update}, {w: 1}, function (err, result) {
+						if (err) {
+							console.error(err.message);
+							return callback({code:-2,message:'数据库出错'});
+						}
+						return callback(null, {"code": 0});
+					})
+				}else{
+					return callback(null,{code:-3,message:'无写权限'});
+				}
 			})
 		})
 	})
