@@ -1,28 +1,57 @@
 .chatHeader {
-	display:none;
+	display:block;
 	position:absolute;
 	top:6px;
-	right:15px;
-	width:400px;
+	right:14px;
+	width:70px;
 	height:20px;
 	font-size:12px;
+}
+.arrow {
+	display: none;
+	width: 15px;
+	height: 15px;
+	background-color: #D6E3F2;
+	-webkit-transform : rotate(45deg);
+	-moz-transform : rotate(45deg);
+	position: absolute;
+	top:32px;
+	right: 62px;
+	box-shadow:0 0 5px 1px #ccc;
+	z-index: 101;
+}
+.arrow2 {
+	display: none;
+	width: 23px;
+	height: 20px;
+	background-color: #D6E3F2;
+	position: absolute;
+	top:40px;
+	right: 58px;
+	z-index: 102;
 }
 .chatContainer {
 	display:none;
 	position:absolute;
-	top:26px;
+	top:40px;
 	right:16px;
 	width:400px;
 	height:400px;
-	border:1px solid #ccc;
+	border-width:1px;
+	border-style: solid;
+	border-color: #ccc;
 	z-index:100;
 	background-color:#fff;
-	box-shadow:0 2px 5px 0 #ccc;
+	box-shadow:0 2px 5px 1px #ccc;
 }
 .chatBanner {
 	height:21px;
+	font-size: 12px;
+	line-height: 21px;
+	background-color: #D6E3F2;
 }
 .chatBtn {
+	visibility: hidden;
 	color:#777;
 }
 .closeBtn {
@@ -32,17 +61,27 @@
 	width:21px;
 	height:21px;
 	background-image:url("/excel-editor/themes/6excel/img/icons/close.png");
+	background-repeat: no-repeat;
+	background-color: transparent;
+	background-position: 0 0;
 }
 .chatList_div {
 	margin-bottom:15px;
-	padding:10px 10px 0 10px;
+	padding-top:10px;
+	padding-right: 10px;
+	padding-bottom: 0;
+	padding-left: 10px;
 	height:272px;
 	width:380px;
+	border-bottom-width: 1px;
+	border-bottom-color: #ccc;
+	border-bottom-style: solid;
 }
 .chatList {
 	height:272px;
 	width:380px;
 	overflow-y:auto;
+	font-size: 12px;
 }
 .chatLi {
 	font-size:12px;
@@ -51,13 +90,70 @@
 	line-height:16px;
 	background-color: #eee;
 	margin-top: 5px;
+	font-size: 12px;
 }
 .chatContent {
 	margin-left:13px;
 	height:30px;
 	width:370px;
+	border-top: 1px;
+	border-right: 1px;
+	border-left: 1px;
+	border-bottom: 1px;
+	border-style: solid;
+	border-color: #ccc;
+	font-size: 12px;
+	box-shadow: 0 0 3px 1px #ddd inset;
+	border-radius: 3px;
+	outline: none;
 }
 .sendBtn {
-	margin:5px 0 0 13px;
+	margin-top:5px;
+	margin-right: 0;
+	margin-bottom: 0;
+	margin-left: 13px;
+	background: -webkit-gradient(linear,left top,left bottom,from(#D2E0F0),to(#D0DEF0));;
+	background: -moz-gradient(linear,left top,left bottom,from(#D2E0F0),to(#D0DEF0));;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #ccc;
+	box-shadow: 0 0 3px 0 #ccc;
+	width: 60px;
+	height: 25px;
+	cursor: pointer;
+}
+.warning {
+	display: none;
+	margin-left: 10px;
+	font-size: 12px;
+	color: #BC1A1C;
+}
+.ActiveRange {
+	position: absolute;
+	overflow: visible;
+	z-index: 3000;
+	visibility: visible;
+	width: 78px;
+	height: 20px;
+}
+.AR_inner {
+	position: absolute;
+	width: 5px;
+	height: 5px;
+	z-index: 3001;
+	background-color: rgb(0, 0, 0);
+	cursor: crosshair;
+	border: 1px solid rgb(255, 255, 255);
+	left: 76px; top: 18px;
+}
+.AR_name {
+	position: absolute;
+	overflow: visible;
+	z-index: 3000;
+	visibility: visible;
+	left: 191px;
+	top: 247px;
+	width: 78px;
+	height: 20px;
 }
 

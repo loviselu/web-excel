@@ -41,7 +41,7 @@ controllers.forEach(function (v) {
 
 wss.on('connection', function (socket) {
 	//获取文档名
-	var docID = socket.upgradeReq.url.slice(1);
+	var docID = socket.upgradeReq.url.slice(1) || 'test';
 	//创建新链接管理或加入socket列表
 	if (docID != '' && connections[docID] instanceof Object) {
 		connections[docID].length++;
@@ -71,6 +71,24 @@ wss.on('connection', function (socket) {
 	 *		code : 1 | 0
 	 * }
 	 *
+	 * 编辑状态更新
+	 * {
+	 *		code : 4,
+	 *  	data : data
+	 * }
+	 *
+	 * 新协作者加入
+	 * {
+	 *		code : 3 ,
+	 *  	data : data
+	 * }
+	 *
+	 * 用户信息
+	 * {
+	 *		code : 5 ,
+	 *  	data : data
+	 * }
+	 *
 	 * 冲突时返回 data 数据结构
 	 * {
 	 *		code : -1,
@@ -97,7 +115,13 @@ wss.on('connection', function (socket) {
 	 * }
 	 */
 	socket.on('message', function (message) {
-		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + this.userName || this.id);
+		var user;
+		if (this.userName == undefined) {
+			user = this.id;
+		} else {
+			user = this.userName;
+		}
+		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + user);
 		try {
 			message = JSON.parse(message);
 		} catch (e) {
@@ -110,45 +134,54 @@ wss.on('connection', function (socket) {
 					//聊天广播
 					socket.send('{"code" : 0}');
 					message.data.user = socket.id;
-					broadcast(socket, doc, json.stringify(message));
+					broadcast(socket, doc, JSON.stringify(message));
 					break;
+
 				case 1 :
 					db.update(socket.userId, message.data, function (err, data) {
 						if (err) {
 							console.error(err.message);
 							socket.send('{"code" : -2, error : "同步失败"}');
 						} else {
-							console.log(json.stringify(data, null, 4));
+							console.log(JSON.stringify(data, null, 4));
 							if (data.code == -1) {
 								//冲突
-								socket.send(json.stringify(data));
+								socket.send(JSON.stringify({"code" : -1, "data" : data}));
 							} else {
 								//文档更新广播
 								socket.send('{"code" : 1}');
-								broadcast(socket, doc, json.stringify(data));
+								broadcast(socket, doc, JSON.stringify(data));
 							}
 						}
 					});
 					break;
+
 				case 4 :
-					broadcast(socket, doc, json.stringify({"code": 4, "data": message.data}));
+					broadcast(socket, doc, JSON.stringify({"code": 4, "data": message.data}));
 					break;
+
 				case 5 :
 					//首次登陆获取用户信息
 					socket.userName = COOKIE.get(message.data, "username");
 					socket.userId = COOKIE.get(message.data, "userId");
-					broadcast(socket, doc, json.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
+					socket.send(JSON.stringify({"code": 2, "data": {"id" : docID, "count": doc.length - 1}}));
+					broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
 					break;
+
 				default :
+					socket.send('{"code" : -4, "error" : "系统错误"}');
 					break;
 			}
 		}
 	});
 
 	socket.on('close', function () {
-		doc.socketlist[this.id] = undefined;
-		if (--doc.length === 0) {
-			delete connections[docid];
+		--doc.length;
+		if (doc.length === 0) {
+			delete connections[docID];
+		} else {
+			console.log("connection closed; User: " + socket.userName);
+			doc.socketList[this.id] = undefined;
 		}
 		console.log(connections);
 	});
