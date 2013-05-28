@@ -182,12 +182,12 @@ wss.on('connection', function (socket) {
 							console.log(JSON.stringify(res, null, 4));
 							switch (res.code) {
 								case 0 :
-									socket.send(JSON.stringify({"code":1,"data":res.data}));
+									broadcast(socket, doc, JSON.stringify({"code":1,"data":res.data}));
 									break;
 
 								case -1 :
 									//冲突
-									socket.send(JSON.stringify({"code":-1, "data":res.conflict}));
+									socket.send(JSON.stringify({"code":-1, "data":res.data}));
 									break;
 
 								case -4 :
