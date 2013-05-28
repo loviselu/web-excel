@@ -2971,9 +2971,10 @@ function GridModel(grid){
 		cell.setOldFormula(value);
 	}
 	if(window.doc){
-		var cellTd = window.grid.cells[address.row][address.col]
-		var userName = COOKIE.get(document.cookie,"username");
-		doc.send({"code":4,"data":{"userName":userName,"position":{"offsetLeft":cellTd.offsetLeft,"offsetTop":cellTd.offsetTop}}});
+		var cellTd = window.grid.cells[address.row][address.col],
+			userName = COOKIE.get(document.cookie,"username"),
+			userId = COOKIE.get(document.cookie,"userId");
+		doc.send({"code":4,"data":{"userName":userName,"userId":userId,"position":{"offsetLeft":cellTd.offsetLeft,"offsetTop":cellTd.offsetTop}}});
 	}
     self.fire("ActiveCellChanged",value);//value为当前change后的activeCell的值
   };

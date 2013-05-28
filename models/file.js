@@ -11,6 +11,7 @@ exports.create = function (userId, data, callback) {
 	database.ready(function(db){
 		db.collection('file', function (err, document) {
 			data['data'] = data['data'] || {};
+			data['data']['cells'] = data['data']['cells'] || {};
 			data['owner'] =  userId;
 			document.insert(data, {w: 1}, function (err, result) {
 				if (err) {
@@ -39,6 +40,7 @@ exports.create = function (userId, data, callback) {
  * @param callback  参数分别为(err, data)
  */
 exports.get = function (userId, fileId, callback) {
+
 	database.ready(function(db) {
 		db.collection('file', function (err, collection) {
 			if (typeof fileId === 'string' && fileId.length === 24) {
@@ -78,7 +80,7 @@ exports.get = function (userId, fileId, callback) {
  *
  * result格式如下：
  * ｛
- *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在)
+ *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在,-5表示文档id不合法)
  *   "conflict" :[{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}]
  * ｝
  * @param userId 用户id
@@ -87,6 +89,10 @@ exports.get = function (userId, fileId, callback) {
  * @param callback 参数分别为(err, result)
  */
 exports.update = function (userId, fileId, data, callback) {
+	if(fileId != null && 'number' != typeof fileId && (fileId.length != 12 && fileId.length != 24)){
+		callback(null,{'code':-5,message:'fileID不合法'});
+		return;
+	}
 	database.ready(function (db) {
 		db.collection('file', function (err, collection) {
 			collection.findOne({_id: new ObjectID(fileId)},{owner:1,writeable_list:1,data:1}, function (err, result) {
@@ -104,14 +110,12 @@ exports.update = function (userId, fileId, data, callback) {
 					for (var key in data['cell']) {
 
 						//冲突判断只判断单元格的值f
-						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['before']['f'] !== result['data']['cells'][key]['f']) {
-							conflict.push(key);
+						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']) {
+							conflict.push({key:key,present:result['data']['cells'][key]});
 						}else{
 							newData[key] = data['cell'][key]['now'];
 						}
 					}
-
-					conflict.push({key:key,present:data['cell'][key]['before']['f']});
 
 					if (conflict.length > 0) {
 						return callback(null, {"code": -1, "conflict": conflict});
@@ -125,7 +129,7 @@ exports.update = function (userId, fileId, data, callback) {
 					collection.update({_id: new ObjectID(fileId)}, {$set:update}, {w: 1}, function (err, result) {
 						if (err) {
 							console.error(err.message);
-							return callback({code:-2,message:'数据库出错'});
+							return callback(err,{code:-2,message:'数据库出错'});
 						}
 						return callback(null, {"code": 0});
 					})

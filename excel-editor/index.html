@@ -32,6 +32,7 @@
 					cookie.set(key, '', opt);
 				}
 			};
+
 			function AJAX() {
 				if (typeof XMLHttpRequest != "undefined") {
 					return new XMLHttpRequest();
@@ -76,6 +77,8 @@
         <div id='chatHeader' class="chatHeader">
             <a id='chatBtn' href="javascript:void(0);" class="chatBtn">聊天</a>
 			&nbsp;
+			<span class="username" id="username"></span>
+			&nbsp;
 			<a class="logoutBtn" href="/user/logout" class="chatBtn">退出</a>
         </div>
 		<div id="arrow" class="arrow"></div>
@@ -95,11 +98,39 @@
         </div>
         <script type="text/javascript">
         function load(){
-			var online = true;
+			var username = document.getElementById('username');
+			username.textContent = '您好! ' + COOKIE.get(document.cookie, "username") || '游客';
+
 			if (navigator.onLine) {
-				if (location.pathname.length > 1 && location.pathname !== '/index.html') {
+				if (location.pathname.length > 1 && location.pathname.indexOf('/doc/') != -1) {
+					//文档id
+					var docID = location.pathname.split('/')[2];
+					localStorage.setItem('docID', docID);
+
 					//非新文档
 					doc = new Collaborate();
+
+					//获取文件内容
+					var xhr = AJAX(),
+						url = '/file/getFileData?fileId=' + docID;
+
+					xhr.open('GET', url, true);
+					xhr.onreadystatechange = function () {
+						if (xhr.readyState == 4 ) {
+							if (xhr.status >= 200 && xhr.status < 300 || xhr.status == 304) {
+								console.log(xhr.responseText);
+								var data = JSON.parse(xhr.responseText);
+
+								//加载文件内容
+								document.title = data.fileName;
+							}
+							else {
+								//出错
+								alert('xhr : 系统出错, 请刷新页面');
+							}
+						}
+					};
+					xhr.send();
 				} else {
 					//新文档
 					// if () {
@@ -130,9 +161,9 @@
             //document info
             this.title = null;
             this.count = null;
-			this.tmpl = '<div class="ActiveRange">' +
+			this.tmpl = '<div class="ActiveRange" id="userId">' +
 							'<div class="AR_name_div">' +
-								'<span class="AR_name"></span>' +
+								'<span class="AR_name">username</span>' +
 							' </div>' +
 					    	'<div class="AR_inner"></div>' +
 					    '</div>';
@@ -150,7 +181,6 @@
 
             socket.onmessage = function (message) {
                 console.log(message);
-                console.log(message.data);
                 var mes = JSON.parse(message.data);
 				console.log(mes);
                 if (mes.code != undefined) {
@@ -160,7 +190,6 @@
                             console.log('opened with ' + mes.data.count +' people');
                             me.count = mes.data.count;
                             document.getElementById('chatCount').textContent = me.count;
-							localStorage.setItem('docId', mes.data.id);
                             break;
 
 						case 3:
@@ -173,7 +202,7 @@
 						case 4:
                             //编辑状态更新
 							console.log(mes.data.userName + '更新了编辑状态');
-							console.log();
+							console.log(mes.data);
                             break;
 
                         case 1 :
@@ -205,30 +234,39 @@
                         case -2 :
                             //同步失败,系统出错
 							console.log("服务器同步失败");
+							alert(mes.error);
 							break;
 
                         case -3 :
                             //参数错误
 							console.log("参数错误");
+							alert(mes.error);
 							break;
 
                         case -4 :
                             //系统错误
 							console.log("系统错误");
+							alert(mes.error);
 							break;
 
                         default :
 							break;
                     }
                 } else {
-					alert("系统出错，请刷新页面");
+					alert("message : 系统出错，请刷新页面");
 				}
             };
 
             socket.onerror = function (e){
-				alert("系统出错，请刷新页面");
+				alert("socket : 系统出错，请刷新页面");
                 console.log(e);
             };
+
+
+			socket.onclose = function (e){
+				alert("网络已断开");
+				console.log(e);
+			};
 
             //send sth.
             this.send = function (data) {
