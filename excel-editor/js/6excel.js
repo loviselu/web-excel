@@ -586,19 +586,18 @@ function JsonHandler(){
   }
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
   self.importCell = function(data){
-	var address=window.model.model.namespace.getNameAddress(data.key);
-	var cell = window.model.model.getCell(address.start.row,address.start.col);
+	var address=window.model.model.namespace.getNameAddress(data.key);	
+	var localVal = sheet.getFormula(address.start.row,address.start.col);
 	if(data.old){
 		var oldVal = data.old.f;
 	}
-	var newVal = data.present.f;
-	if(!data.old||newVal==oldVal){
+	if(!data.old||localVal==oldVal){
 		var sheet=application.activeSheet;
-		var localOld = sheet.getFormula(address.start.row,address.start.col);
-		cell.setOldFormula(localOld);
 		self.importFontStyles(Array(data.present.fs));
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
 		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
+		var cell = window.model.model.getCell(address.start.row,address.start.col);
+		cell.setOldFormula(localVal);
 		application.model.refresh();
 	}
 
@@ -647,10 +646,11 @@ function JsonHandler(){
 	var cells = data.cells;
     for(var i in cells){
 		var address = window.model.model.namespace.getNameAddress(i);
-		var cell = window.model.model.getCell(address.start.row,address.start.col);
-		cell.setOldFormula(cells[i].f);
+		var oldVal = sheet.getFormula(address.start.row,address.start.col);
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(cells[i].f||""),true);
 		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs.charAt(0),true);
+		var cell = window.model.model.getCell(address.start.row,address.start.col);
+		cell.setOldFormula(oldVal);
 		self.importFontStyles(Array(cells[i].fs));
     }
     return sheet;
