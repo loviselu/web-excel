@@ -598,6 +598,7 @@ function JsonHandler(){
 		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
 		var cell = window.model.model.getCell(address.start.row,address.start.col);
 		cell.setOldFormula(localVal);
+		cell.setOldFontStyleId(data.present.fs.charAt(0));
 		application.model.refresh();
 	}
 
@@ -650,6 +651,7 @@ function JsonHandler(){
 		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs.charAt(0),true);
 		var cell = window.model.model.getCell(address.start.row,address.start.col);
 		cell.setOldFormula(cells[i].f||"");
+		cell.setOldFontStyleId(cells[i].fs.charAt(0));
 		self.importFontStyles(Array(cells[i].fs));
     }
     return sheet;
@@ -2994,7 +2996,7 @@ function GridModel(grid){
 		cell.setOldFormula(value);
 	}
 	if(window.doc){
-		var cellTd = window.grid.cells[address.row][address.col],
+		var cellTd = window.grid.cells[self.activeCell.row][self.activeCell.col],
 			userName = COOKIE.get(document.cookie,"username"),
 			userId = COOKIE.get(document.cookie,"userId");
 		doc.send({"code":4,"data":{"userName":userName,"userId":userId,"position":{"offsetLeft":cellTd.offsetLeft,"offsetTop":cellTd.offsetTop}}});
@@ -3352,7 +3354,7 @@ function ExtendModelEvents(self,grid){
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
 	  if(window.doc&&activeSheet.getCell(self.activeCell.row,self.activeCell.col)){
 		var cell = activeSheet.getCell(self.activeCell.row,self.activeCell.col);
-		if(cell.oldFormula!=cell.formula){
+		if(cell.oldFormula!=cell.formula||cell.oldFontStyleId!=cell.oldFontStyleId){
 			var cellData = JsonManager.exportCell(window.model.activeCell);
 			doc.send({"code":1,"data":cellData});
 		}	
@@ -5031,7 +5033,7 @@ function Cell(row,column){
   self.getOldFormula=function(){
 	return this.oldFormula;
   }
-  self.setOldFormula=function(formula){
+  self.setOldFormula=function(formula,fontId){
 	this.oldFormula = formula;
   }
    //这里的setFormula与Sheet类里面的setFormula不同
