@@ -114,10 +114,16 @@ wss.on('connection', function (socket) {
 	 *  	data : data
 	 * }
 	 *
+	 * 断开连接
+	 * {
+	 *		code : 6 ,
+	 *  	data : data
+	 * }
+	 *
 	 * 冲突时返回 data 数据结构
 	 * {
 	 *		code : -1,
-	 *		conflict : conflict
+	 *		data : conflict
 	 * }
 	 *
 	 * 数据操作失败
@@ -162,27 +168,31 @@ wss.on('connection', function (socket) {
 			switch (message.code) {
 				case 0 :
 					//聊天广播
-					socket.send('{"code" : 0}');
+					socket.send('{"code":0}');
 					message.data.user = socket.id;
 					broadcast(socket, doc, JSON.stringify(message));
 					break;
 
 				case 1 :
-					db.update(socket.userId, docId, message.data, function (err, data) {
+					db.update(socket.userId, docId, message.data, function (err, res) {
 						if (err) {
 							console.error(err.message);
 							socket.send('{"code" : -2, "error" : "数据库出错, 同步失败"}');
 						} else {
-							console.log(JSON.stringify(data, null, 4));
-							switch (data.code) {
+							console.log(JSON.stringify(res, null, 4));
+							switch (res.code) {
+								case 0 :
+									socket.send(JSON.stringify({"code":1,"data":res.data}));
+									break;
+
 								case -1 :
 									//冲突
-									socket.send(JSON.stringify({"code" : -1, "data" : data}));
+									socket.send(JSON.stringify({"code":-1, "data":res.conflict}));
 									break;
 
 								case -4 :
 									//文档不存在
-									socket.send('{"code" : -4, "error" : "文档不存在"}');
+									socket.send('{"code":-4, "error":"文档不存在"}');
 									break;
 
 								case -3 :
@@ -191,8 +201,8 @@ wss.on('connection', function (socket) {
 
 								case 1 :
 									//文档更新广播
-									socket.send('{"code" : 1}');
-									broadcast(socket, doc, JSON.stringify(data));
+									socket.send('{"code":1}');
+									broadcast(socket, doc, JSON.stringify(res));
 									break;
 							}
 						}
@@ -200,28 +210,34 @@ wss.on('connection', function (socket) {
 					break;
 
 				case 4 :
-					broadcast(socket, doc, JSON.stringify({"code": 4, "data": message.data}));
+					if (!message.data.userId) {
+						message.data.userName = socket.userName;
+						message.data.userId = socket.userId;
+					}
+					broadcast(socket, doc, JSON.stringify({"code":4, "data": message.data}));
 					break;
 
 				case 5 :
 					//首次登陆获取用户信息
 					socket.userName = COOKIE.get(message.data, "username") || ("游客" + socket.id);
-					socket.userId = COOKIE.get(message.data, "userId");
+					socket.userId = COOKIE.get(message.data, "userId") || ('youke' + socket.id);
 					socket.send(JSON.stringify({"code": 2, "data": {"id" : docId, "count": doc.length - 1}}));
 					broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
 					break;
 
 				default :
-					socket.send('{"code" : -4, "error" : "系统错误"}');
+					socket.send('{"code":-4, "error":"系统错误"}');
 					break;
 			}
 		}
 		else {
-			socket.send('{"code" : -4, "error" : "系统错误"}');
+			socket.send('{"code":-4, "error":"系统错误"}');
 		}
 	});
 
 	socket.on('close', function () {
+		//通知其他用户
+		broadcast(socket, doc, JSON.stringify({"code": 6, "data": {"count": doc.length - 1, "userName": socket.userName, "userId": socket.userId}}));
 
 		--doc.length;
 
