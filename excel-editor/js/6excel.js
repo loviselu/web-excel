@@ -3354,7 +3354,8 @@ function ExtendModelEvents(self,grid){
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
 	  if(window.doc&&activeSheet.getCell(self.activeCell.row,self.activeCell.col)){
 		var cell = activeSheet.getCell(self.activeCell.row,self.activeCell.col);
-		if(cell.oldFormula!=cell.formula||cell.oldFontStyleId!=cell.oldFontStyleId){
+		var formula = cell.formula||'';
+		if(cell.oldFormula!=formula||cell.oldFontStyleId!=cell.oldFontStyleId){
 			var cellData = JsonManager.exportCell(window.model.activeCell);
 			doc.send({"code":1,"data":cellData});
 		}	
