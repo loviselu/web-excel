@@ -520,7 +520,8 @@ function JsonHandler(){
   //chenjiabin,sheet的另一种数据格式的导出，给后台保存为xlsx文件提供数据
   self.exportReserveSheet=function(sheet){
     var formula=null;
-    var json="{\"sheetId\":null,\"name\":\"sheet1\",\"data\":[";
+	var sheetName = sheet.sheetName||"sheetName";
+    var json="{\"sheetId\":null,\"name\":\""+sheetName+"\",\"data\":[";
     var cellsC="";
 	var cellsA="";
     for(var i=0;i<sheet.cells.length;i++){
@@ -586,19 +587,21 @@ function JsonHandler(){
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
   self.importCell =function(data){
 	var addressName,address;
-	for(var i in data.cell){
+	for(var i in data.cells){
 		addressName = i;
 		address = window.model.model.namespace.getNameAddress(addressName);
 		break;//address.start.row,addresss.start.col
 	}
-	var localVal = application.model.model.getFormula(address.start.row,address.start.col);
-	var oldVal = data.cell[addressName].old.f;
-	if(localVal==oldVal){
-		var sheet=application.activeSheet;
-		self.importFontStyles(Array(data.cell[addressName].now.fs));
-		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cell[addressName].now.f||""),true);
-		sheet.setCellFontStyleId(address.start.row,address.start.col,data.cell[addressName].now.fs.charAt(0),true);
-		application.model.refresh();
+	if(!addressName){
+		var localVal = application.model.model.getFormula(address.start.row,address.start.col);
+		var oldVal = data.cells[addressName].old.f;
+		if(localVal==oldVal){
+			var sheet=application.activeSheet;
+			self.importFontStyles(Array(data.cells[addressName].now.fs));
+			sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cells[addressName].now.f||""),true);
+			sheet.setCellFontStyleId(address.start.row,address.start.col,data.cells[addressName].now.fs.charAt(0),true);
+			application.model.refresh();
+		}
 	}
   }
   // self.exportBook=function(id,book,sheet){
@@ -1003,13 +1006,13 @@ function createToolbars(application){
 		alert('开始导出了哦');
 		var xhr = new XMLHttpRequest();
 		var json = encodeURIComponent(JsonManager.exportReserveSheet(activeSheet));
-		xhr.open('post','http://localhost:3000/transFile',false);
+		xhr.open('post','/transFile',false);
 		xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 		xhr.send(encodeURIComponent("data")+"="+json);
 		if((xhr.status>=200&&xhr.status<300)||xhr.status==304){
-			alert('success'+xhr.status);
+			window.open("http://localhost:3000"+xhr.responseText, "_blank");
 		}else{
-			alert('unsuccess');
+			alert('导出失败，请确保表格存在数据~');
 		}
       }});
     
