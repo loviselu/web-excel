@@ -125,13 +125,14 @@ exports.update = function (userId, fileId, data, callback) {
 
 						//冲突判断只判断单元格的值f
 						if (result['data']['cells'][key]
-							&& (data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f'] || data['cell'][key]['now']['f'] !== result['data']['cells'][key]['f'])) {
+							&& data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']
+							&& data['cell'][key]['now']['f'] !== result['data']['cells'][key]['f']) {
 							conflict = {key:key,present:result['data']['cells'][key]};
 						}else{
 							newData = {key:key,present:data['cell'][key]['now'],old:result['data']['cells'][key]};
 						}
 					}
-					console.log(newData);
+
 					if (conflict) {
 						return callback(null, {"code": -1, "data": conflict});
 					}
