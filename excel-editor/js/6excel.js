@@ -585,13 +585,17 @@ function JsonHandler(){
 	
   }
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
-  self.importCell =function(data){
+  self.importCell = function(data){
 	var address=window.model.model.namespace.getNameAddress(data.key);
 	var cell = window.model.model.getCell(address.start.row,address.start.col);
-	var oldVal = cell&&cell.getOldFormula();
+	if(data.old){
+		var oldVal = data.old.f;
+	}
 	var newVal = data.present.f;
-	if(newVal==oldVal){
+	if(!data.old||newVal==oldVal){
 		var sheet=application.activeSheet;
+		var localOld = sheet.getFormula(address.start.row,address.start.col);
+		cell.setOldFormula(localOld);
 		self.importFontStyles(Array(data.present.fs));
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
 		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
