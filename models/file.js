@@ -46,20 +46,20 @@ exports.get = function (userId, fileId, callback) {
 			if (typeof fileId === 'string' && fileId.length === 24) {
 				collection.findOne({_id: new ObjectID(fileId)}, function (err, result) {
 					if (err) {
-						return callback({code:-1,message:'数据库出错'});
+						return callback(err,{code:-1,message:'数据库出错'});
 					}
 					if(!result){
-						return callback({code:-4,message:'指定文档不存在'});
+						return callback(null,{code:-4,message:'指定文档不存在'});
 					}
 					if(result.owner === userId || !result.readable_list || result.readable_list === 'all' || result.readable_list.indexOf(userId) > -1){
 						return callback(null, result);
 					}else{
-						return callback({code:-2,message:'无权限访问'});
+						return callback(null,{code:-2,message:'无权限访问'});
 					}
 				});
 
 			} else {
-				return callback({code:-3,message:'文档id不合法'});
+				return callback(null,{code:-3,message:'文档id不合法'});
 			}
 		});
 	});

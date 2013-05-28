@@ -73,15 +73,21 @@ exports.newFile = function (req, res) {
 
 /*
  * 获取文档数据
+ * 返回：
+ *  {code:0:data:{}}
+ *  {code:-1,message:'数据库出错'}
+ *  {code:-2,message:'无权限访问'}
+ *  {code:-3,message:'文档id不合法'}
+ *  {code:-4,message:'指定文档不存在'}
  */
 exports.getFileData = function (req, res) {
 	fileModel.get(req.session.userId,req.query.fileId, function (err, data) {
 		if (err) {
 			res.json({code:-1,message:'数据库出错'})
-		} else if (data != null) {
+		} else if (data.code === 0) {
 			res.json({code:0,data:data})
 		} else {
-			res.json({code:-2,message:'指定文件不存在'});
+			res.json(data);
 		}
 	});
 };
