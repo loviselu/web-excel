@@ -114,26 +114,26 @@ exports.update = function (userId, fileId, data, callback) {
 					|| result.writeable_list === 'all'
 					|| result.writeable_list.indexOf(userId) > -1 ){
 					//检查是否有冲突
-					var conflict = {};
-					var newData = {};
+					var conflict,
+						newData;
+
 					for (var key in data['cell']) {
 
 						//冲突判断只判断单元格的值f
 						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']) {
 							conflict = {key:key,present:result['data']['cells'][key]};
 						}else{
-							newData[key] = data['cell'][key]['now'];
+							newData = {key:key,present:data['cell'][key]['now']};
 						}
 					}
 
-					if (conflict.length > 0) {
+					if (conflict) {
 						return callback(null, {"code": -1, "data": conflict});
 					}
 
 					var update = {};
-					for (var key in newData) {
-						update['data.cells.'+key] = newData[key];
-					}
+
+					update['data.cells.'+newData.key] = newData.present;
 
 					collection.update({_id: new ObjectID(fileId)}, {$set:update}, {w: 1}, function (err, result) {
 						if (err) {
