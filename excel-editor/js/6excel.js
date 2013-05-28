@@ -586,13 +586,13 @@ function JsonHandler(){
   }
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
   self.importCell = function(data){
+	var sheet=application.activeSheet;
 	var address=window.model.model.namespace.getNameAddress(data.key);	
 	var localVal = sheet.getFormula(address.start.row,address.start.col);
 	if(data.old){
 		var oldVal = data.old.f;
 	}
 	if(!data.old||localVal==oldVal){
-		var sheet=application.activeSheet;
 		self.importFontStyles(Array(data.present.fs));
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
 		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
@@ -2278,7 +2278,11 @@ function DiffSelector(){
 		this.style.visibility="visible";
 	  };
 	 self.addContent=function(response){
-		var json = JSON.parse(response);
+		if(response instanceof Object){
+			var json = response;
+		}else{
+			var json = JSON.parse(response);
+		}	
 		var addressName = json.data.key;
 		var address = application.model.model.namespace.getNameAddress(addressName).start;
 		var localVal = application.model.model.getFormula(address.row,address.col);
