@@ -87,7 +87,7 @@ exports.get = function (userId, fileId, callback) {
  * result格式如下：
  * ｛
  *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在,-5表示文档id不合法)
- *   "conflict" :[{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}]
+ *   "data" :[{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}]
  * ｝
  * @param userId 用户id
  * @param fileId
@@ -127,7 +127,7 @@ exports.update = function (userId, fileId, data, callback) {
 					}
 
 					if (conflict.length > 0) {
-						return callback(null, {"code": -1, "conflict": conflict});
+						return callback(null, {"code": -1, "data": conflict});
 					}
 
 					var update = {};
