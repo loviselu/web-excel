@@ -593,13 +593,14 @@ function JsonHandler(){
 		break;//address.start.row,addresss.start.col
 	}
 	if(addressName){
-		var localVal = application.model.model.getFormula(address.start.row,address.start.col);
-		var oldVal = data.cells[addressName].old.f;
-		if(localVal==oldVal){
+		var cell = window.model.model.getCell(address.start.row,address.start.col);
+		var oldVal = cell.getOldFormula();
+		var newVal = data.cells[addressName].present.f;
+		if(newVal==oldVal){
 			var sheet=application.activeSheet;
-			self.importFontStyles(Array(data.cells[addressName].now.fs));
-			sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cells[addressName].now.f||""),true);
-			sheet.setCellFontStyleId(address.start.row,address.start.col,data.cells[addressName].now.fs.charAt(0),true);
+			self.importFontStyles(Array(data.cells[addressName].present.fs));
+			sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cells[addressName].present.f||""),true);
+			sheet.setCellFontStyleId(address.start.row,address.start.col,data.cells[addressName].present.fs.charAt(0),true);
 			application.model.refresh();
 		}
 	}
@@ -1019,18 +1020,11 @@ function createToolbars(application){
     tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
 		document.getElementById('transFileSelector').onclick = function(){
 			Ext.Ajax.request({     
-			   url: contextPath+"/transLocalFile",     
+			   url: "/transLocalFile",     
 			   method: "POST",   
-			   form : 'userForm',   
-			   success: function (response, option) {     
-				   response = Ext.JSON.decode(response.responseText);     
-				   if (response.success == true) {     
-					   if (response.flag == true) {     
-						   Ext.MessageBox.alert("提示", "成功！");     
-					   }else {    
-						   Ext.MessageBox.alert("错误信息", "失败！");   
-					   }     
-				   }else { Ext.MessageBox.alert("错误信息", response.msges); }     
+			   form : 'transFileForm',   
+			   success: function (response, option) { 
+					alert(response);				     
 			   },     
 			   failure: function () { Ext.Msg.alert("提示", "失败<br>没有捕获到异常"); }  
 			});  
