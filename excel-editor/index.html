@@ -140,7 +140,8 @@
 
 								//加载文件内容
 								document.title = res.fileName;
-								JsonManager.importCell(res.data);
+								JsonManager.importSheet(res.data);
+								window.model.refresh();
 
 								//存储
 								localStorage.setItem('docId', res._id);
@@ -157,7 +158,7 @@
 					//新文档
 					if (!localStorage.docId) {
 					    //读缓存
-						JsonManager.importCell(mes.data);
+//						JsonManager.importCell();
 					}
 				}
 			}
@@ -168,30 +169,30 @@
 			window.ogID = '' ;
 			window.ogWID = '' ;
 
-            var application = new Bao.Excel(document.body);
-            In.add('dragCopy',{path:'/excel-editor/js/dragCopy.js',type:'js',charset:'utf-8'});
-            In.ready('dragCopy',function() {
-                dragCopy();
-            });
+			var application = new Bao.Excel(document.body);
+			In.add('dragCopy',{path:'/excel-editor/js/dragCopy.js',type:'js',charset:'utf-8'});
+			In.ready('dragCopy',function() {
+				dragCopy();
+			});
 
-        }
+		}
 
-        //非新文档建立链接和聊天工具
-        function Collaborate () {
-            //copy
-            var me = this;
+		//非新文档建立链接和聊天工具
+		function Collaborate () {
+			//copy
+			var me = this;
 
-            //document info
-            this.title = null;
-            this.count = null;
+			//document info
+			this.title = null;
+			this.count = null;
 			this.tmpl = '<div class="AR_name_div">' +
 							'<span class="AR_name">username</span>' +
 						' </div>' +
 						'<div class="AR_inner"></div>';
 
-            //websocket
-            var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\/doc\//g,''),
-                socket = new WebSocket(url);
+			//websocket
+			var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\/doc\//g,''),
+				socket = new WebSocket(url);
 
 			socket.onopen = function () {
 				me.send({
@@ -200,34 +201,37 @@
 				});
 			};
 
-            socket.onmessage = function (message) {
-                console.log(message);
-                var mes = JSON.parse(message.data);
+			socket.onmessage = function (message) {
+				console.log(message);
+				var mes = JSON.parse(message.data);
 				console.log(mes);
-                if (!mes.code) {
-                    switch (mes.code) {
-                        case 2 :
-                            //成功建立链接
-                            console.log('opened with ' + mes.data.count +' people');
-                            me.count = mes.data.count;
-                            document.getElementById('chatCount').textContent = me.count;
-                            break;
+				if (mes.code != undefined) {
+					switch (mes.code) {
+						case 2 :
+							//成功建立链接
+							console.log('opened with ' + mes.data.count +' people');
+
+							me.count = mes.data.count;
+							document.getElementById('chatCount').textContent = me.count;
+							break;
 
 						case 3:
-                            //有新的协作者加入
+							//有新的协作者加入
 							console.log('新协作者' + mes.data.userName + '加入');
-                            me.count = mes.data.count;
-                            document.getElementById('chatCount').textContent = me.count;
-                            break;
+
+							me.count = mes.data.count;
+							document.getElementById('chatCount').textContent = me.count;
+							break;
 
 						case 4:
-                            //编辑状态更新
+							//编辑状态更新
 							console.log(mes.data.userName + '更新了编辑状态');
 							console.log(mes.data);
+
 							var act = document.getElementById(mes.data.userId);
-							if (act.length > 0) {
-								act.style.top = mes.data.offsetTop;
-								act.style.left = mes.data.offsetLeft;
+							if (act) {
+								act.style.top = mes.data.position.offsetTop + 'px';
+								act.style.left = mes.data.position.offsetLeft + 'px';
 							}
 							else {
 								var tmpl = me.tmpl.replace('username', mes.data.userName);
@@ -235,71 +239,87 @@
 								act.className = 'ActiveRange';
 								act.id = mes.data.userId;
 								act.innerHTML = tmpl;
-								act.style.top = mes.data.offsetTop;
-								act.style.left = mes.data.offsetLeft;
-								document.body.appendChild(act);
+								act.style.top = mes.data.position.offsetTop + 'px';
+								act.style.left = mes.data.position.offsetLeft + 'px';
+								document.getElementById('GridContainer').appendChild(act);
 							}
-                            break;
+							break;
 
-                        case 1 :
-                            //文档操作
-                            if (mes.data instanceof Object) {
-                                //文档被更新,可直接合并
+						case 6:
+							//有协作者离开
+							console.log(mes.data.userName + '离开了文档');
+							console.log(mes.data);
+
+							var act_end = document.getElementById(mes.data.userId);
+							if (act_end) {
+								document.getElementById('GridContainer').removeChild(act_end);
+							}
+							break;
+
+						case 1 :
+							//文档操作
+							if (mes.data instanceof Object) {
+								//文档被更新,可直接合并
 								JsonManager.importCell(mes.data);
-                            }
+								window.model.refresh();
+							}
 							else {
-                                //编辑成功
+								//编辑成功
 								console.log("同步成功");
-                            }
-                            break;
+							}
+							break;
 
-                        case 0 :
-                            //聊天
-                            if (mes.data instanceof Object) {
-                                chat.recieve(mes.data);
-                            }
+						case 0 :
+							//聊天
+							if (mes.data instanceof Object) {
+								chat.recieve(mes.data);
+							}
 							else {
 								//成功发送聊天信息
 								console.log("成功发送聊天信息");
 							}
-                            break;
-
-                        case -1 :
-                            //存在冲突
-							grid.diffSelector.addContent(mes.data);
 							break;
 
-                        case -2 :
-                            //同步失败,系统出错
+						case -1 :
+							//存在冲突
+							grid.diffSelector.addContent(mes.data);
+							window.model.refresh();
+							break;
+
+						case -2 :
+							//同步失败,系统出错
 							console.log("服务器同步失败");
 							$.showMessage(mes.error);
 							break;
 
-                        case -3 :
-                            //参数错误
+						case -3 :
+							//参数错误
 							console.log("参数错误");
 							$.showMessage(mes.error);
 							break;
 
-                        case -4 :
-                            //系统错误
+						case -4 :
+							//系统错误
 							console.log("系统错误");
 							$.showMessage(mes.error);
 							break;
 
-                        default :
+						default :
+							//未知错误
+							console.log("未知错误");
+							$.showMessage("未知错误");
 							break;
-                    }
-                }
+					}
+				}
 				else {
 					$.showMessage("message : 系统出错，请刷新页面");
 				}
-            };
+			};
 
-            socket.onerror = function (e){
+			socket.onerror = function (e){
 				$.showMessage("socket : 系统出错，请刷新页面");
-                console.log(e);
-            };
+				console.log(e);
+			};
 
 
 			socket.onclose = function (e){
@@ -307,48 +327,48 @@
 				console.log(e);
 			};
 
-            //send sth.
-            this.send = function (data) {
+			//send sth.
+			this.send = function (data) {
 				if (data.code == 1) {
 					data.data = JSON.parse(data.data);
 				}
 
-                socket.send(JSON.stringify(data));
-            };
+				socket.send(JSON.stringify(data));
+			};
 
-            //聊天工具
-            var chat = {
-                chat : this,
-                init : function () {
-                    //dom
-                    var chatHeader = document.getElementById('chatHeader'),
-                        chatBtn = document.getElementById('chatBtn'),
-                        chatContainer = document.getElementById('chatContainer'),
-                        chatList = document.getElementById('chatList'),
-                        sendBtn = document.getElementById('sendBtn'),
-                        closeBtn = document.getElementById('closeBtn'),
-                        chatContent = document.getElementById('chatContent'),
+			//聊天工具
+			var chat = {
+				chat : this,
+				init : function () {
+					//dom
+					var chatHeader = document.getElementById('chatHeader'),
+						chatBtn = document.getElementById('chatBtn'),
+						chatContainer = document.getElementById('chatContainer'),
+						chatList = document.getElementById('chatList'),
+						sendBtn = document.getElementById('sendBtn'),
+						closeBtn = document.getElementById('closeBtn'),
+						chatContent = document.getElementById('chatContent'),
 						warning = document.getElementById('warning'),
 						arrow = document.getElementById('arrow'),
 						arrow2 = document.getElementById('arrow2');
 
-                    //event
-                    chatBtn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        if (chatContainer.style.display != 'block') {
-                            chatContainer.style.display = 'block';
-                            arrow.style.display = 'block';
+					//event
+					chatBtn.addEventListener('click', function (e) {
+						e.preventDefault();
+						if (chatContainer.style.display != 'block') {
+							chatContainer.style.display = 'block';
+							arrow.style.display = 'block';
 							arrow2.style.display = 'block';
-                        } else {
-                            chatContainer.style.display = 'none';
+						} else {
+							chatContainer.style.display = 'none';
 							arrow.style.display = 'none';
 							arrow2.style.display = 'none';
-                        }
-                    }, false);
+						}
+					}, false);
 
-                    closeBtn.addEventListener('click', function (e) {
-                        chatContainer.style.display = 'none';
-                    });
+					closeBtn.addEventListener('click', function (e) {
+						chatContainer.style.display = 'none';
+					});
 
 					chatContent.addEventListener('keydown', function (e) {
 						if (e.ctrlKey && e.keyCode == 13) {
@@ -357,61 +377,61 @@
 					});
 
 					var t;
-                    sendBtn.addEventListener('click', function (e) {
-                        if (chatContent.value !== '') {
-                            chat.send(chatContent.value);
-                            chatContent.value = '';
-                        } else {
-                            //内容为空
+					sendBtn.addEventListener('click', function (e) {
+						if (chatContent.value !== '') {
+							chat.send(chatContent.value);
+							chatContent.value = '';
+						} else {
+							//内容为空
 							warning.style.display = "inline-block";
 							clearTimeout(t);
 							t = setTimeout(function () {
 								warning.style.display = "none";
 							}, 2500);
-                        }
-                    });
+						}
+					});
 
-                    chatBtn.style.visibility = 'visible';
+					chatBtn.style.visibility = 'visible';
 
 					//计算箭头位置
 					var right = parseInt(getComputedStyle(chatHeader).width) - 7;
 					arrow2.style.right = right - 4 + 'px';
 					arrow.style.right = right + 'px';
 
-                },
+				},
 
-                send : function (message) {
-                    if (message !== '') {
-                        this.createMes(message);
-                        me.send({
-                            "code" : 0,
-                            "data" : {
-                                "content" : encodeURIComponent(message),
+				send : function (message) {
+					if (message !== '') {
+						this.createMes(message);
+						me.send({
+							"code" : 0,
+							"data" : {
+								"content" : encodeURIComponent(message),
 								"userName" : COOKIE.get(document.cookie, "username")
-                            }
-                        });
-                    }
-                },
+							}
+						});
+					}
+				},
 
-                recieve : function (message) {
-                    if (message != undefined) {
-                        this.createMes(decodeURIComponent(message.content), message.userName);
-                    }
-                },
+				recieve : function (message) {
+					if (message != undefined) {
+						this.createMes(decodeURIComponent(message.content), message.userName);
+					}
+				},
 
-                createMes : function (mes, user) {
-                    user = user || '我';
-                    var newChat = document.createElement('li');
-                    newChat.className = 'chatLi';
-                    newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + mes;
-                    chatList.appendChild(newChat);
-                    chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
-                }
-            };
+				createMes : function (mes, user) {
+					user = user || '我';
+					var newChat = document.createElement('li');
+					newChat.className = 'chatLi';
+					newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + mes;
+					chatList.appendChild(newChat);
+					chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
+				}
+			};
 
-            chat.init();
+			chat.init();
 
-        }
-        </script>
-    </body>
+		}
+		</script>
+	</body>
 </html>
