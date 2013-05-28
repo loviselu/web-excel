@@ -487,7 +487,7 @@ function JsonHandler(){
       if(sheet.cells[i]){
         for(var j=0;j<sheet.cells[i].length;j++){
           if(sheet.cells[i][j]){
-            formula=sheet.cells[i][j].getFormula();
+            formula=sheet.cells[i][j].getFormula()||'';
             if(formula==undefined||formula==""){
               formula=null;
             }else {
@@ -551,8 +551,8 @@ function JsonHandler(){
     return json;
   };
   //chenjiabin，另一种数据格式的sheet导入方式，导如xlsx文件时使用
-  self.importReserveSheet = function(configs,data){
-	var sheet=new Sheet(configs);
+  self.importReserveSheet = function(data){
+	var sheet=application.activeSheet;
 	var sheetId = data.sheetId,
 		sheetName = data.sheetName,
 		cells = data.data,
@@ -563,7 +563,6 @@ function JsonHandler(){
 		}
 		
     }
-    return sheet;
   }
   //chenjiabin，其中fs也导出为一个字符串，与exportFontStyles一致
   self.exportCell = function(address){
@@ -574,10 +573,10 @@ function JsonHandler(){
 		var fontStyle = Styler.getFontStyleById(cell.getFontStyleId()).id;
 		var oldFontStyle = Styler.getFontStyleById(cell.getOldFontStyleId()).id;
 		json+=addressName+'":{"old":{';
-		json+='"f":"'+cell.getOldFormula();
+		json+='"f":"'+cell.getOldFormula()||'';
 		json+='","fs":"'+cell.getOldFontStyleId()+'|'+oldFontStyle;
 		json+='"},"now":{';
-		json+='"f":"'+cell.getFormula();
+		json+='"f":"'+cell.getFormula()||'';
 		json+='","fs":"'+cell.getFontStyleId()+'|'+fontStyle;
 		json+='"}}}}';
 		return json;
@@ -586,24 +585,18 @@ function JsonHandler(){
   }
   //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
   self.importCell =function(data){
-	var addressName,address;
-	for(var i in data.cells){
-		addressName = i;
-		address = window.model.model.namespace.getNameAddress(addressName);
-		break;//address.start.row,addresss.start.col
+	var address=window.model.model.namespace.getNameAddress(data.key);
+	var cell = window.model.model.getCell(address.start.row,address.start.col);
+	var oldVal = cell&&cell.getOldFormula();
+	var newVal = data.present.f;
+	if(newVal==oldVal){
+		var sheet=application.activeSheet;
+		self.importFontStyles(Array(data.present.fs));
+		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
+		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
+		application.model.refresh();
 	}
-	if(addressName){
-		var cell = window.model.model.getCell(address.start.row,address.start.col);
-		var oldVal = cell.getOldFormula();
-		var newVal = data.cells[addressName].present.f;
-		if(newVal==oldVal){
-			var sheet=application.activeSheet;
-			self.importFontStyles(Array(data.cells[addressName].present.fs));
-			sheet.setFormula(address.start.row,address.start.col,stripslashes(data.cells[addressName].present.f||""),true);
-			sheet.setCellFontStyleId(address.start.row,address.start.col,data.cells[addressName].present.fs.charAt(0),true);
-			application.model.refresh();
-		}
-	}
+
   }
   // self.exportBook=function(id,book,sheet){
     // if(id==undefined){
@@ -1018,16 +1011,18 @@ function createToolbars(application){
       }});
     
     tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
-		document.getElementById('transFileSelector').onclick = function(){
+		document.getElementById('transFileSelector').onchange = function(){
 			Ext.Ajax.request({     
 			   url: "/transLocalFile",     
-			   method: "POST",   
+			   method: "POST", 
 			   form : 'transFileForm',   
 			   success: function (response, option) { 
-					alert(response);				     
+					var data = $(response.responseText).get(0).innerHTML;
+					JsonManager.importReserveSheet(data);	
+					window.model.refresh();
 			   },     
 			   failure: function () { Ext.Msg.alert("提示", "失败<br>没有捕获到异常"); }  
-			});  
+			}); 
 		}
         document.getElementById('transFileSelector').click();
       }},"-");
@@ -3343,8 +3338,11 @@ function ExtendModelEvents(self,grid){
       }
 	  //chenjiabin,在这里调用函数向后台发送还未失去焦点的单元格activeCell的数据
 	  if(window.doc&&activeSheet.getCell(self.activeCell.row,self.activeCell.col)){
-		var cellData = JsonManager.exportCell(window.model.activeCell);
-		doc.send({"code":1,"data":cellData});
+		var cell = activeSheet.getCell(self.activeCell.row,self.activeCell.col);
+		if(cell.oldFormula!=cell.formula){
+			var cellData = JsonManager.exportCell(window.model.activeCell);
+			doc.send({"code":1,"data":cellData});
+		}	
 	  }
       self.changeActiveCell(address);//该函数会派发ActiveCellChanged事件，改变model.activeCell
       self.setSelection(new Range(address));
