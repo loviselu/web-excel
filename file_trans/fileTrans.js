@@ -12,4 +12,27 @@ exports.build = function(json){
 	fs.writeFileSync('/web-excel/file_trans/'+sheetData.name+'.xlsx',buffer);
 	return sheetData.name;
 }
+exports.parse = function(path){
+	var docData = xlsx.parse(path);
+	docData = docData.worksheets[0];
+	var returnJSON = '{"sheetId":"","sheetName":"'+docData.name+'","data":[',
+		cellsC = '',
+		cellsA = '';
+	var i,j;
+	for(i=0;i<docData.data.length;i++){
+		if(docData.data[i].length!=0){
+			cellsC = '';
+			for(j=0;j<docData.data[i].length;j++){
+				cellsC=cellsC+',"'+docData.data[i][j].value+'"';
+			}
+			cellsC=',['+cellsC.substr(1)+']';
+		}else{
+			cellsC=',[]';
+		}	
+		cellsA+=cellsC;
+	}
+	cellsA=cellsA.substr(1)+']';
+	returnJSON=returnJSON+cellsA+'}';;
+	return returnJSON;
+}
 

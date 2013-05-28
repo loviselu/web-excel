@@ -57,7 +57,8 @@ app.get('/file_trans/:fileName',function(req,res){
 	res.download('./file_trans/'+req.params.fileName);
 });
 app.post('/transLocalFile',function(req,res){
-	res.end("success");
+	var json = fileTrans.parse(req.files.userTransFile.path);
+	res.end(json);
 });
 
 wss.on('connection', function (socket) {
