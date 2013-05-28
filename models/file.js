@@ -87,7 +87,11 @@ exports.get = function (userId, fileId, callback) {
  * result格式如下：
  * ｛
  *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在,-5表示文档id不合法)
- *   "data" :{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}
+ *   "data" :{
+ *      key:"2B",
+ *      present:{"f":"sss","fs":"0|1|10|#000000|false|false|false|general|bottom"},
+ *      old:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"},
+ *    }
  * ｝
  * @param userId 用户id
  * @param fileId
@@ -120,13 +124,13 @@ exports.update = function (userId, fileId, data, callback) {
 					for (var key in data['cell']) {
 
 						//冲突判断只判断单元格的值f
-						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']) {
+						if (result['data']['cells'][key] && data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']) {
 							conflict = {key:key,present:result['data']['cells'][key]};
 						}else{
-							newData = {key:key,present:data['cell'][key]['now']};
+							newData = {key:key,present:data['cell'][key]['now'],old:result['data']['cells'][key]};
 						}
 					}
-
+					console.log(newData);
 					if (conflict) {
 						return callback(null, {"code": -1, "data": conflict});
 					}
