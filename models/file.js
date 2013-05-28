@@ -120,7 +120,7 @@ exports.update = function (userId, fileId, data, callback) {
 
 						//冲突判断只判断单元格的值f
 						if (result['data']['cells'] && result['data']['cells'][key] && data['cell'][key]['old']['f'] !== result['data']['cells'][key]['f']) {
-							conflict.push({key:key,present:result['data']['cells'][key]});
+							conflict = {key:key,present:result['data']['cells'][key]};
 						}else{
 							newData[key] = data['cell'][key]['now'];
 						}
