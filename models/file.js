@@ -87,7 +87,7 @@ exports.get = function (userId, fileId, callback) {
  * result格式如下：
  * ｛
  *   "code": -1 (0表示成功，-1表示有冲突,-2表示数据库错误，-3表示没有写权限，-4表示文档不存在,-5表示文档id不合法)
- *   "data" :[{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}]
+ *   "data" :{key:"2B",present:{"f":"undefined","fs":"0|1|10|#000000|false|false|false|general|bottom"}
  * ｝
  * @param userId 用户id
  * @param fileId
@@ -114,7 +114,7 @@ exports.update = function (userId, fileId, data, callback) {
 					|| result.writeable_list === 'all'
 					|| result.writeable_list.indexOf(userId) > -1 ){
 					//检查是否有冲突
-					var conflict = [];
+					var conflict = {};
 					var newData = {};
 					for (var key in data['cell']) {
 
@@ -140,7 +140,7 @@ exports.update = function (userId, fileId, data, callback) {
 							console.error(err.message);
 							return callback(err,{code:-2,message:'数据库出错'});
 						}
-						return callback(null, {"code": 0,"data":newData});
+						return callback(null, {"code": 0,"data":{cells:newData}});
 					})
 				}else{
 					return callback(null,{code:-3,message:'无写权限'});
