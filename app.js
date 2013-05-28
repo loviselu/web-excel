@@ -60,20 +60,20 @@ app.get('/file_trans/:fileName',function(req,res){
 
 wss.on('connection', function (socket) {
 	//获取文档名
-	var docID = socket.upgradeReq.url.slice(1) || 'test';
+	var docId = socket.upgradeReq.url.slice(1) || 'test';
 
 	//创建新链接管理或加入socket列表
-	if (docID != '' && connections[docID] instanceof Object) {
-		connections[docID].length++;
+	if (docId != '' && connections[docId] instanceof Object) {
+		connections[docId].length++;
 	}
 	else {
-		connections[docID] = {};
-		connections[docID].socketList = [];
-		connections[docID].length = 1;
+		connections[docId] = {};
+		connections[docId].socketList = [];
+		connections[docId].length = 1;
 	}
 
 	//付给连接id值
-	var doc = connections[docID];
+	var doc = connections[docId];
 	socket.id = doc.socketList.push(socket) - 1;
 	console.log(connections);
 
@@ -146,7 +146,7 @@ wss.on('connection', function (socket) {
 		else {
 			user = this.userName;
 		}
-		console.log('received: %s', message + ' from Doc:' + docID + ' User:' + user);
+		console.log('received: %s', message + ' from Doc:' + docId + ' User:' + user);
 
 		try {
 			message = JSON.parse(message);
@@ -166,7 +166,7 @@ wss.on('connection', function (socket) {
 					break;
 
 				case 1 :
-					db.update(socket.userId, docID, message.data, function (err, data) {
+					db.update(socket.userId, docId, message.data, function (err, data) {
 						if (err) {
 							console.error(err.message);
 							socket.send('{"code" : -2, "error" : "数据库出错, 同步失败"}');
@@ -205,7 +205,7 @@ wss.on('connection', function (socket) {
 					//首次登陆获取用户信息
 					socket.userName = COOKIE.get(message.data, "username") || ("游客" + socket.id);
 					socket.userId = COOKIE.get(message.data, "userId");
-					socket.send(JSON.stringify({"code": 2, "data": {"id" : docID, "count": doc.length - 1}}));
+					socket.send(JSON.stringify({"code": 2, "data": {"id" : docId, "count": doc.length - 1}}));
 					broadcast(socket, doc, JSON.stringify({"code": 3, "data": {"count": doc.length - 1, "userName": socket.userName}}));
 					break;
 
@@ -224,7 +224,7 @@ wss.on('connection', function (socket) {
 		--doc.length;
 
 		if (doc.length === 0) {
-			delete connections[docID];
+			delete connections[docId];
 		}
 		else {
 			console.log("connection closed; User: " + socket.userName);

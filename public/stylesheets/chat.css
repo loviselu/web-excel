@@ -3,7 +3,6 @@
 	position:absolute;
 	top:6px;
 	right:14px;
-	width:200px;
 	height:20px;
 	font-size:12px;
 	text-align: right;
@@ -148,6 +147,7 @@
 	left: 76px; top: 18px;
 }
 .AR_name_div {
+	display: none;
 	position: absolute;
 	overflow: visible;
 	z-index: 3000;
@@ -159,4 +159,7 @@
 }
 .AR_name {
 	font-size: 12px;
+}
+.ActiveRange :hover > .AR_name_div {
+	display: block;
 }
