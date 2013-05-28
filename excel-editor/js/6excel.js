@@ -903,9 +903,11 @@ function CommHandler(configs){
 	var res=JSON.parse(data.responseText);
 	application.activeSheet.id = res.data.fileId;
 	alert("成功将新建表格保存至服务器~~");
+	window.location.href = '/doc/'+ res.data.fileId;
   };
   //chenjiabin
-  self.sendBook=function(name,data){
+  self.sendBook=function(name,jsonData){
+	var data = JSON.parse(jsonData);
     var params={fileName:name,data:data};
     self.sendRequest(params,"/file/newFile",self.bookSaveServerResponse,function(){alert("保存失败");});
   };
@@ -1000,8 +1002,8 @@ function createToolbars(application){
         //saveBookConfirm();
 		alert('开始导出了哦');
 		var xhr = new XMLHttpRequest();
-		var json = encodeURIComponent(JsonManager.exportSheet(activeSheet));
-		xhr.open('post','http://localhost:3000/exportXlsx',false);
+		var json = encodeURIComponent(JsonManager.exportReserveSheet(activeSheet));
+		xhr.open('post','http://localhost:3000/transFile',false);
 		xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 		xhr.send(encodeURIComponent("data")+"="+json);
 		if((xhr.status>=200&&xhr.status<300)||xhr.status==304){

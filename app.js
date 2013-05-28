@@ -4,6 +4,7 @@ var http = require('http'),
 	fs = require('fs'),
 	path = require('path'),
 	db = require('./models/file.js'),
+	fileTrans = require('./file_trans/fileTrans.js'),
 	ws = require('ws').Server,
 	app = express(),
 	wss = new ws({port: 8080}),
@@ -37,6 +38,14 @@ controllers.forEach(function (v) {
 	controller.routes.forEach(function (route) {
 		app[route.method](route.pattern, controller[route.handler]);
 	})
+});
+
+//接收导入导出文件请求
+app.post('/transFile',function(req,res){
+	var json = req.body.data;
+	var fileName = fileTrans.build(json);
+	console.log(json);
+	res.end();
 });
 
 wss.on('connection', function (socket) {
