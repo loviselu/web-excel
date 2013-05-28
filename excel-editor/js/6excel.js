@@ -592,7 +592,7 @@ function JsonHandler(){
 		address = window.model.model.namespace.getNameAddress(addressName);
 		break;//address.start.row,addresss.start.col
 	}
-	if(!addressName){
+	if(addressName){
 		var localVal = application.model.model.getFormula(address.start.row,address.start.col);
 		var oldVal = data.cells[addressName].old.f;
 		if(localVal==oldVal){
@@ -1017,7 +1017,26 @@ function createToolbars(application){
       }});
     
     tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
-        
+		document.getElementById('transFileSelector').onclick = function(){
+			Ext.Ajax.request({     
+			   url: contextPath+"/secured/cust/custController.do?method=saveUser",     
+			   method: "POST",   
+			  <SPAN style="COLOR: #ff0000"> form : 'userForm',</SPAN>   
+			   success: function (response, option) {     
+				   response = Ext.JSON.decode(response.responseText);     
+				   if (response.success == true) {     
+					   if (response.flag == true) {     
+						   Ext.MessageBox.alert("提示", "保存信息成功！");     
+						   Ext.getCmp('gridpanel').store.load();  //刷新列表   
+					   }else {    
+						   Ext.MessageBox.alert("错误信息", "保存信息失败！");   
+					   }     
+				   }else { Ext.MessageBox.alert("错误信息", response.msges); }     
+			   },     
+			   failure: function () { Ext.Msg.alert("提示", "保存失败<br>没有捕获到异常"); }  
+			});  
+		}
+        document.getElementById('transFileSelector').click();
       }},"-");
     
     //导入导出需要服务器支持
