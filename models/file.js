@@ -51,7 +51,13 @@ exports.get = function (userId, fileId, callback) {
 					if(!result){
 						return callback(null,{code:-4,message:'指定文档不存在'});
 					}
-					if(result.owner === userId || !result.readable_list || result.readable_list === 'all' || result.readable_list.indexOf(userId) > -1){
+					if(result.owner === userId
+						|| !result.readable_list
+						|| result.readable_list === 'all'
+						|| result.readable_list.indexOf(userId) > -1
+						|| !result.writeable_list
+						|| result.writeable_list === 'all'
+						|| result.writeable_list.indexOf(userId) > -1){
 						return callback(null, result);
 					}else{
 						return callback(null,{code:-2,message:'无权限访问'});
@@ -103,9 +109,12 @@ exports.update = function (userId, fileId, data, callback) {
 				if (!result) {
 					return callback(null,{code:-4,message:'指定文档不存在'});
 				}
-				if(result.owner === userId || !result.writeable_list || result.writeable_list === 'all' || result.writeable_list.indexOf(userId) > -1 ){
+				if(result.owner === userId
+					|| !result.writeable_list
+					|| result.writeable_list === 'all'
+					|| result.writeable_list.indexOf(userId) > -1 ){
 					//检查是否有冲突
-					var conflict = {};
+					var conflict = [];
 					var newData = {};
 					for (var key in data['cell']) {
 
