@@ -140,7 +140,7 @@ exports.update = function (userId, fileId, data, callback) {
 							console.error(err.message);
 							return callback(err,{code:-2,message:'数据库出错'});
 						}
-						return callback(null, {"code": 0,"data":{cells:newData}});
+						return callback(null, {"code": 0,"data":newData});
 					})
 				}else{
 					return callback(null,{code:-3,message:'无写权限'});
