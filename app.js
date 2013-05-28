@@ -4,6 +4,7 @@ var http = require('http'),
 	fs = require('fs'),
 	path = require('path'),
 	db = require('./models/file.js'),
+	fileTrans = require('./file_trans/fileTrans.js'),
 	ws = require('ws').Server,
 	app = express(),
 	wss = new ws({port: 8080}),
@@ -37,6 +38,14 @@ controllers.forEach(function (v) {
 	controller.routes.forEach(function (route) {
 		app[route.method](route.pattern, controller[route.handler]);
 	})
+});
+
+//接收导入导出文件请求
+app.post('/transFile',function(req,res){
+	var json = req.body.data;
+	var fileName = fileTrans.build(json);
+	console.log(json);
+	res.end();
 });
 
 wss.on('connection', function (socket) {
@@ -150,7 +159,7 @@ wss.on('connection', function (socket) {
 					db.update(socket.userId, docID, message.data, function (err, data) {
 						if (err) {
 							console.error(err.message);
-							socket.send('{"code" : -2, error : "同步失败"}');
+							socket.send('{"code" : -2, "error" : "数据库出错, 同步失败"}');
 						} else {
 							console.log(JSON.stringify(data, null, 4));
 							switch (data.code) {
@@ -159,8 +168,9 @@ wss.on('connection', function (socket) {
 									socket.send(JSON.stringify({"code" : -1, "data" : data}));
 									break;
 
-								case -2 :
-									//数据库错误
+								case -4 :
+									//文档不存在
+									socket.send('{"code" : -4, "error" : "文档不存在"}');
 									break;
 
 								case -3 :
