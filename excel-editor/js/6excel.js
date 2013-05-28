@@ -2285,6 +2285,9 @@ function DiffSelector(){
 		var addressName = json.key;
 		var address = application.model.model.namespace.getNameAddress(addressName).start;
 		var localVal = application.model.model.getFormula(address.row,address.col);
+		if(localVal==json.present.f){
+			self.setVisible(false);
+		}
 		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+json.present.f+'</span>';
 		self.childNodes[2].innerHTML = '2、自己数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
 		self.childNodes[1].onclick = function(){
