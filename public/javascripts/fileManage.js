@@ -120,7 +120,7 @@ $(function(){
 	messageDialog_tmpl += "	        <span><%=message%><\/span>";
 	messageDialog_tmpl += "        <\/div>";
 	messageDialog_tmpl += "        <div class=\"bottom\">";
-	messageDialog_tmpl += "            <button class='button js_close'>确定<\/button>";
+	messageDialog_tmpl += "            <button class='button js_confirm'>确定<\/button>";
 	messageDialog_tmpl += "        <\/div>";
 	messageDialog_tmpl += "    <\/div>";
 	messageDialog_tmpl += "<\/div>";
@@ -139,9 +139,18 @@ $(function(){
 	};
 
 	//通用消息框函数
-	$.showMessage = function(message,title){
+	$.showMessage = function(message,title,callback){
 		var messageDialog = $(messageDialog_tmpl_func({message:message,title:title}));
 		messageDialog.appendTo(document.body).autoPosition().show();
+		$('#messageDialog .js_confirm').one('click',function(){
+			$('#messageDialog').remove();
+			if(callback){
+				callback()
+			}
+		})
+		$('#messageDialog .js_close').one('click',function(){
+			$('#messageDialog').remove();
+		})
 	}
 
 	//弹出层通用操作
