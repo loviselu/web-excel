@@ -904,8 +904,8 @@ function CommHandler(configs){
   };
   //chenjiabin
   self.sendBook=function(name,jsonData){
-	var data = JSON.parse(jsonData);
-    var params={fileName:name,data:data};
+	//var data = JSON.parse(jsonData);
+    var params={fileName:name,data:jsonData};
     self.sendRequest(params,"/file/newFile",self.bookSaveServerResponse,function(){alert("保存失败");});
   };
   self.exportBook=function(data,format){
