@@ -1019,21 +1019,20 @@ function createToolbars(application){
     tb.add({icon:iconspath+"open-16x16.png",cls:"x-btn-icon",tooltip:"<b>"+lang("导入表格")+"..</b><br/>"+lang("导入表格"),handler:function(){
 		document.getElementById('transFileSelector').onclick = function(){
 			Ext.Ajax.request({     
-			   url: contextPath+"/secured/cust/custController.do?method=saveUser",     
+			   url: contextPath+"/transLocalFile",     
 			   method: "POST",   
-			  <SPAN style="COLOR: #ff0000"> form : 'userForm',</SPAN>   
+			   form : 'userForm',   
 			   success: function (response, option) {     
 				   response = Ext.JSON.decode(response.responseText);     
 				   if (response.success == true) {     
 					   if (response.flag == true) {     
-						   Ext.MessageBox.alert("提示", "保存信息成功！");     
-						   Ext.getCmp('gridpanel').store.load();  //刷新列表   
+						   Ext.MessageBox.alert("提示", "成功！");     
 					   }else {    
-						   Ext.MessageBox.alert("错误信息", "保存信息失败！");   
+						   Ext.MessageBox.alert("错误信息", "失败！");   
 					   }     
 				   }else { Ext.MessageBox.alert("错误信息", response.msges); }     
 			   },     
-			   failure: function () { Ext.Msg.alert("提示", "保存失败<br>没有捕获到异常"); }  
+			   failure: function () { Ext.Msg.alert("提示", "失败<br>没有捕获到异常"); }  
 			});  
 		}
         document.getElementById('transFileSelector').click();
