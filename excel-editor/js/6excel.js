@@ -574,10 +574,10 @@ function JsonHandler(){
 		var fontStyle = Styler.getFontStyleById(cell.getFontStyleId()).id;
 		var oldFontStyle = Styler.getFontStyleById(cell.getOldFontStyleId()).id;
 		json+=addressName+'":{"old":{';
-		json+='"f":"'+cell.getOldFormula()||'';
+		json+='"f":"'+(cell.getOldFormula()||'');
 		json+='","fs":"'+cell.getOldFontStyleId()+'|'+oldFontStyle;
 		json+='"},"now":{';
-		json+='"f":"'+cell.getFormula()||'';
+		json+='"f":"'+(cell.getFormula()||'');
 		json+='","fs":"'+cell.getFontStyleId()+'|'+fontStyle;
 		json+='"}}}}';
 		return json;
