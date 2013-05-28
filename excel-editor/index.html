@@ -105,8 +105,8 @@
 			if (navigator.onLine) {
 				//初始化用户信息
 				var username = document.getElementById('username'),
-						name = decodeURIComponent(COOKIE.get(document.cookie, "username")),
-						id = COOKIE.get(document.cookie, 'userId');
+					name = decodeURIComponent(COOKIE.get(document.cookie, "username")),
+					id = COOKIE.get(document.cookie, 'userId');
 				username.textContent = '您好! ' + name || '游客';
 
 				//本地存储
@@ -230,8 +230,8 @@
 
 							var act = document.getElementById(mes.data.userId);
 							if (act) {
-								act.style.top = mes.data.position.offsetTop + 'px';
-								act.style.left = mes.data.position.offsetLeft + 'px';
+								act.style.top = mes.data.position.offsetTop - 2 + 'px';
+								act.style.left = mes.data.position.offsetLeft - 2 + 'px';
 							}
 							else {
 								var tmpl = me.tmpl.replace('username', mes.data.userName);
@@ -239,8 +239,8 @@
 								act.className = 'ActiveRange';
 								act.id = mes.data.userId;
 								act.innerHTML = tmpl;
-								act.style.top = mes.data.position.offsetTop + 'px';
-								act.style.left = mes.data.position.offsetLeft + 'px';
+								act.style.top = mes.data.position.offsetTop - 2 + 'px';
+								act.style.left = mes.data.position.offsetLeft - 2 + 'px';
 								document.getElementById('GridContainer').appendChild(act);
 							}
 							break;
@@ -259,6 +259,7 @@
 						case 1 :
 							//文档操作
 							if (mes.data instanceof Object) {
+								console.log("文档被修改");
 								//文档被更新,可直接合并
 								JsonManager.importCell(mes.data);
 								window.model.refresh();
