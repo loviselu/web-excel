@@ -646,11 +646,10 @@ function JsonHandler(){
 	var cells = data.cells;
     for(var i in cells){
 		var address = window.model.model.namespace.getNameAddress(i);
-		var oldVal = sheet.getFormula(address.start.row,address.start.col);
 		sheet.setFormula(address.start.row,address.start.col,stripslashes(cells[i].f||""),true);
 		sheet.setCellFontStyleId(address.start.row,address.start.col,cells[i].fs.charAt(0),true);
 		var cell = window.model.model.getCell(address.start.row,address.start.col);
-		cell.setOldFormula(oldVal);
+		cell.setOldFormula(cells[i].f||"");
 		self.importFontStyles(Array(cells[i].fs));
     }
     return sheet;
@@ -2283,17 +2282,17 @@ function DiffSelector(){
 		}else{
 			var json = JSON.parse(response);
 		}	
-		var addressName = json.data.key;
+		var addressName = json.key;
 		var address = application.model.model.namespace.getNameAddress(addressName).start;
 		var localVal = application.model.model.getFormula(address.row,address.col);
-		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+json.data.present.f+'</span>';
+		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+json.present.f+'</span>';
 		self.childNodes[2].innerHTML = '2、自己数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
 		self.childNodes[1].onclick = function(){
 			var val = this.childNodes[1].innerHTML;
 			application.model.model.setFormula(address.row,address.col,val);
-			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.data.present.f);
-			JsonManager.importFontStyles(Array(json.data.present.fs));
-			window.activeSheet.setCellFontStyleId(address.row,address.col,json.data.present.fs.charAt(0),true);
+			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.present.f);
+			JsonManager.importFontStyles(Array(json.present.fs));
+			window.activeSheet.setCellFontStyleId(address.row,address.col,json.present.fs.charAt(0),true);
 			if(window.doc){
 				var cellData = JsonManager.exportCell(address);
 				doc.send({"code":1,"data":cellData});
@@ -2303,7 +2302,7 @@ function DiffSelector(){
 		self.childNodes[2].onclick = function(){
 			var val = this.childNodes[1].innerHTML;
 			application.model.model.setFormula(address.row,address.col,val);
-			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.data.present.f);
+			window.model.model.getCell(address.row,address.col,val).setOldFormula(json.present.f);
 			if(window.doc){
 				var cellData = JsonManager.exportCell(address);
 				doc.send({"code":1,"data":cellData});
