@@ -552,10 +552,11 @@ function JsonHandler(){
   };
   //chenjiabin，另一种数据格式的sheet导入方式，导如xlsx文件时使用
   self.importReserveSheet = function(data){
+	var dataObj = JSON.parse(data);
 	var sheet=application.activeSheet;
-	var sheetId = data.sheetId,
-		sheetName = data.sheetName,
-		cells = data.data,
+	var sheetId = dataObj.sheetId,
+		sheetName = dataObj.sheetName,
+		cells = dataObj.data,
 		i = 0,j=0;
     for(i=0;i<cells.length;i++){
 		for(j=0;j<cells[i].length;j++){
@@ -904,8 +905,8 @@ function CommHandler(configs){
   };
   //chenjiabin
   self.sendBook=function(name,jsonData){
-	var data = JSON.parse(jsonData);
-    var params={fileName:name,data:data};
+	//var data = JSON.parse(jsonData);
+    var params={fileName:name,data:jsonData};
     self.sendRequest(params,"/file/newFile",self.bookSaveServerResponse,function(){alert("保存失败");});
   };
   self.exportBook=function(data,format){
