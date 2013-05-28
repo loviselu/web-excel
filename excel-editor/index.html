@@ -98,47 +98,67 @@
         </div>
         <script type="text/javascript">
         function load(){
-			var username = document.getElementById('username');
-			username.textContent = '您好! ' + COOKIE.get(document.cookie, "username") || '游客';
-
+			//初始化协作连接
 			if (navigator.onLine) {
+				//初始化用户信息
+				var username = document.getElementById('username'),
+						name = decodeURIComponent(COOKIE.get(document.cookie, "username")),
+						id = COOKIE.get(document.cookie, 'userId');
+				username.textContent = '您好! ' + name || '游客';
+
+				//本地存储
+				localStorage.setItem('username', name);
+				if (id != '') {
+					localStorage.setItem('userId', id);
+				}
+
 				if (location.pathname.length > 1 && location.pathname.indexOf('/doc/') != -1) {
 					//文档id
-					var docID = location.pathname.split('/')[2];
-					localStorage.setItem('docID', docID);
+					var docId = location.pathname.split('/')[2];
 
-					//非新文档
+					//非新文档,创建连接
 					doc = new Collaborate();
 
 					//获取文件内容
 					var xhr = AJAX(),
-						url = '/file/getFileData?fileId=' + docID;
+						url = '/file/getFileData?fileId=' + docId;
 
 					xhr.open('GET', url, true);
 					xhr.onreadystatechange = function () {
 						if (xhr.readyState == 4 ) {
 							if (xhr.status >= 200 && xhr.status < 300 || xhr.status == 304) {
 								console.log(xhr.responseText);
-								var data = JSON.parse(xhr.responseText);
+								try {
+									var res = JSON.parse(xhr.responseText);
+								}
+								catch (e) {
+									$.showMessage('xhr : 参数错误');
+								}
 
 								//加载文件内容
-								document.title = data.fileName;
+								document.title = res.fileName;
+								JsonManager.importCell(res.data);
+
+								//存储
+								localStorage.setItem('docId', res._id);
 							}
 							else {
 								//出错
-								alert('xhr : 系统出错, 请刷新页面');
+								$.showMessage('xhr : 系统出错, 请刷新页面');
 							}
 						}
 					};
 					xhr.send();
-				} else {
-					//新文档
-					// if () {
-					//     //读缓存
-					//JsonManager.importCell(mes.data);
-					// }
 				}
-			} else {
+				else {
+					//新文档
+					if (!localStorage.docId) {
+					    //读缓存
+						JsonManager.importCell(mes.data);
+					}
+				}
+			}
+			else {
 				//读离线缓存
 			}
 
@@ -161,12 +181,10 @@
             //document info
             this.title = null;
             this.count = null;
-			this.tmpl = '<div class="ActiveRange" id="userId">' +
-							'<div class="AR_name_div">' +
-								'<span class="AR_name">username</span>' +
-							' </div>' +
-					    	'<div class="AR_inner"></div>' +
-					    '</div>';
+			this.tmpl = '<div class="AR_name_div">' +
+							'<span class="AR_name">username</span>' +
+						' </div>' +
+						'<div class="AR_inner"></div>';
 
             //websocket
             var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\/doc\//g,''),
@@ -183,7 +201,7 @@
                 console.log(message);
                 var mes = JSON.parse(message.data);
 				console.log(mes);
-                if (mes.code != undefined) {
+                if (!mes.code) {
                     switch (mes.code) {
                         case 2 :
                             //成功建立链接
@@ -203,6 +221,21 @@
                             //编辑状态更新
 							console.log(mes.data.userName + '更新了编辑状态');
 							console.log(mes.data);
+							var act = document.getElementById(mes.data.userId);
+							if (act.length > 0) {
+								act.style.top = mes.data.offsetTop;
+								act.style.left = mes.data.offsetLeft;
+							}
+							else {
+								var tmpl = me.tmpl.replace('username', mes.data.userName);
+								act = document.createElement('div');
+								act.className = 'ActiveRange';
+								act.id = mes.data.userId;
+								act.innerHTML = tmpl;
+								act.style.top = mes.data.offsetTop;
+								act.style.left = mes.data.offsetLeft;
+								document.body.appendChild(act);
+							}
                             break;
 
                         case 1 :
@@ -210,7 +243,8 @@
                             if (mes.data instanceof Object) {
                                 //文档被更新,可直接合并
 								JsonManager.importCell(mes.data);
-                            } else {
+                            }
+							else {
                                 //编辑成功
 								console.log("同步成功");
                             }
@@ -220,7 +254,8 @@
                             //聊天
                             if (mes.data instanceof Object) {
                                 chat.recieve(mes.data);
-                            } else {
+                            }
+							else {
 								//成功发送聊天信息
 								console.log("成功发送聊天信息");
 							}
@@ -234,37 +269,38 @@
                         case -2 :
                             //同步失败,系统出错
 							console.log("服务器同步失败");
-							alert(mes.error);
+							$.showMessage(mes.error);
 							break;
 
                         case -3 :
                             //参数错误
 							console.log("参数错误");
-							alert(mes.error);
+							$.showMessage(mes.error);
 							break;
 
                         case -4 :
                             //系统错误
 							console.log("系统错误");
-							alert(mes.error);
+							$.showMessage(mes.error);
 							break;
 
                         default :
 							break;
                     }
-                } else {
-					alert("message : 系统出错，请刷新页面");
+                }
+				else {
+					$.showMessage("message : 系统出错，请刷新页面");
 				}
             };
 
             socket.onerror = function (e){
-				alert("socket : 系统出错，请刷新页面");
+				$.showMessage("socket : 系统出错，请刷新页面");
                 console.log(e);
             };
 
 
 			socket.onclose = function (e){
-				alert("网络已断开");
+				$.showMessage("网络已断开");
 				console.log(e);
 			};
 
@@ -273,6 +309,7 @@
 				if (data.code == 1) {
 					data.data = JSON.parse(data.data);
 				}
+
                 socket.send(JSON.stringify(data));
             };
 
@@ -332,6 +369,12 @@
                     });
 
                     chatBtn.style.visibility = 'visible';
+
+					//计算箭头位置
+					var right = parseInt(getComputedStyle(chatHeader).width) - 7;
+					arrow2.style.right = right - 4 + 'px';
+					arrow.style.right = right + 'px';
+
                 },
 
                 send : function (message) {
