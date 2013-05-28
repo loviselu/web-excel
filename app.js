@@ -56,7 +56,9 @@ app.post('/transFile',function(req,res){
 app.get('/file_trans/:fileName',function(req,res){
 	res.download('./file_trans/'+req.params.fileName);
 });
-
+app.post('/transLocalFile',function(req,res){
+	res.end("success");
+});
 
 wss.on('connection', function (socket) {
 	//获取文档名
