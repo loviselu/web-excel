@@ -9,7 +9,7 @@ exports.build = function(json){
 	var buffer = xlsx.build({worksheets: [
 	  {"name":sheetData.name, "data":sheetData.data}
 	]});
-	fs.writeFileSync('/file_trans/'+sheetData.name+'.xlsx',buffer);
+	fs.writeFileSync('/web-excel/file_trans/'+sheetData.name+'.xlsx',buffer);
 	return sheetData.name;
 }
 

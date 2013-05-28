@@ -44,9 +44,19 @@ controllers.forEach(function (v) {
 app.post('/transFile',function(req,res){
 	var json = req.body.data;
 	var fileName = fileTrans.build(json);
-	console.log(json);
-	res.end();
+	fs.readFile('/web-excel/file_trans/'+fileName+'.xlsx', 'utf-8', function (err, data) {
+		if (err) {
+			console.error(err.message);
+			res.end('error');
+		} else {
+			res.end('/file_trans/'+fileName+'.xlsx');
+		}
+	});
 });
+app.get('/file_trans/:fileName',function(req,res){
+	res.download('./file_trans/'+req.params.fileName);
+});
+
 
 wss.on('connection', function (socket) {
 	//获取文档名
