@@ -10,7 +10,7 @@ var ObjectID = require('mongodb').ObjectID;
 exports.create = function (userId, data, callback) {
 	database.ready(function(db){
 		db.collection('file', function (err, document) {
-			data['data'] = data['data'] || {};
+			data['data'] = data['data']?JSON.parse(data['data']) : {};
 			data['data']['cells'] = data['data']['cells'] || {};
 			data['owner'] =  userId;
 			document.insert(data, {w: 1}, function (err, result) {
