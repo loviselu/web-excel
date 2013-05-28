@@ -13,9 +13,9 @@ exports.routes = [
 		'handler' : 'newFile'
 	},
 	{
-		'pattern': '/file/getFileDate',
+		'pattern': '/file/getFileData',
 		'method': 'get',
-		'handler': 'getFileDate'
+		'handler': 'getFileData'
 	},
 	{
 		'pattern': '/file/getFileList',
@@ -74,14 +74,14 @@ exports.newFile = function (req, res) {
 /*
  * 获取文档数据
  */
-exports.getFileDate = function (req, res) {
+exports.getFileData = function (req, res) {
 	fileModel.get(req.session.userId,req.query.fileId, function (err, data) {
 		if (err) {
 			res.json({code:-1,message:'数据库出错'})
-		} else if (data != null) {
+		} else if (data.code === 0) {
 			res.json({code:0,data:data})
 		} else {
-			res.json({code:-2,message:'指定文件不存在'});
+			res.json(data);
 		}
 	});
 };
