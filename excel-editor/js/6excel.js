@@ -2260,7 +2260,8 @@ function DiffSelector(){
 		this.setZIndex(3000);
 		WrapEvents(this);
 		self.register("solveDiff");
-	}
+	};
+	self.diffList = [];
 	self.setVisible=function(value){
 		if(value){
 		  this.style.visibility="visible";
@@ -2283,44 +2284,56 @@ function DiffSelector(){
 		}
 		this.style.visibility="visible";
 	  };
-	 self.addContent=function(response){
-		if(response instanceof Object){
-			var json = response;
+	 self.addContent=function(response){	
+		if(self.diffList[0]){
+			self.diffList.push(response);
 		}else{
-			var json = JSON.parse(response);
-		}	
-		var addressName = json.key;
-		var address = application.model.model.namespace.getNameAddress(addressName).start;
-		var localVal = application.model.model.getFormula(address.row,address.col)||"";
-		var remoteVal = json.present.f||"";
-		if(localVal==remoteVal){
-			self.setVisible(false);
+			self.diffList.push(response);
+			self.showTip();
 		}
-		self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+remoteVal+'</span>';
-		self.childNodes[2].innerHTML = '2、自己数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
-		self.childNodes[1].onclick = function(){
-			var val = this.childNodes[1].innerHTML;
-			application.model.model.setFormula(address.row,address.col,val);
-			window.model.model.getCell(address.row,address.col,val).setOldFormula(remoteVal);
-			JsonManager.importFontStyles(Array(json.present.fs));
-			window.activeSheet.setCellFontStyleId(address.row,address.col,json.present.fs.charAt(0),true);
-			if(window.doc){
-				var cellData = JsonManager.exportCell(address);
-				doc.send({"code":1,"data":cellData});
+	 };
+	 self.showTip = function(){
+		var response = self.diffList[0];
+		if(response){
+			if(response instanceof Object){
+				var json = response;
+			}else{
+				var json = JSON.parse(response);
+			}	
+			var addressName = json.key;
+			var address = application.model.model.namespace.getNameAddress(addressName).start;
+			var localVal = application.model.model.getFormula(address.row,address.col)||"";
+			var remoteVal = json.present.f||"";
+			if(localVal==remoteVal){
+				self.setVisible(false);
 			}
-			self.fire("solveDiff");
+			self.childNodes[1].innerHTML = '1、其他用户数据：'+'<span>'+remoteVal+'</span>';
+			self.childNodes[2].innerHTML = '2、自己数据：'+'<span>'+localVal+'</span>';	//将选择的值赋值给当前格子。这里没有改变model里对应格子的值，只是改变显示的值，model中对应的值在格子失去焦点时改变
+			self.childNodes[1].onclick = function(){
+				var val = this.childNodes[1].innerHTML;
+				application.model.model.setFormula(address.row,address.col,val);
+				window.model.model.getCell(address.row,address.col,val).setOldFormula(remoteVal);
+				JsonManager.importFontStyles(Array(json.present.fs));
+				window.activeSheet.setCellFontStyleId(address.row,address.col,json.present.fs.charAt(0),true);
+				if(window.doc){
+					var cellData = JsonManager.exportCell(address);
+					doc.send({"code":1,"data":cellData});
+				}
+				self.fire("solveDiff");
+			}
+			self.childNodes[2].onclick = function(){
+				var val = this.childNodes[1].innerHTML;
+				application.model.model.setFormula(address.row,address.col,val);
+				window.model.model.getCell(address.row,address.col,val).setOldFormula(remoteVal);
+				if(window.doc){
+					var cellData = JsonManager.exportCell(address);
+					doc.send({"code":1,"data":cellData});
+				 }
+				self.fire("solveDiff");
+			}
+			self.fitToRange(window.grid.cells[address.row][address.col]);
 		}
-		self.childNodes[2].onclick = function(){
-			var val = this.childNodes[1].innerHTML;
-			application.model.model.setFormula(address.row,address.col,val);
-			window.model.model.getCell(address.row,address.col,val).setOldFormula(remoteVal);
-			if(window.doc){
-				var cellData = JsonManager.exportCell(address);
-				doc.send({"code":1,"data":cellData});
-			 }
-			self.fire("solveDiff");
-		}
-		self.fitToRange(window.grid.cells[address.row][address.col]);
+		
 	 }
 	self.construct();
 	return self;
@@ -2330,6 +2343,8 @@ function addGridMethods(grid){
 	grid.diffSelector.on('solveDiff',function(selector){
 		selector.setVisible(false);
 		window.model.refresh();
+		selector.diffList.shift();
+		selector.showTip();
 	});
   grid.selectorBox.on("EditingMode",function(){
     grid.fire("EditingMode",true);
