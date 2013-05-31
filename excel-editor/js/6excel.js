@@ -3361,7 +3361,7 @@ function ExtendModelEvents(self,grid){
 	  if(window.doc&&activeSheet.getCell(self.activeCell.row,self.activeCell.col)){
 		var cell = activeSheet.getCell(self.activeCell.row,self.activeCell.col);
 		var formula = cell.formula||'';
-		if(cell.oldFormula!=formula||cell.oldFontStyleId!=cell.oldFontStyleId){
+		if(cell.oldFormula!=formula||cell.fontStyleId!=cell.oldFontStyleId){
 			var cellData = JsonManager.exportCell(window.model.activeCell);
 			doc.send({"code":1,"data":cellData});
 		}	
