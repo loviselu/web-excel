@@ -531,7 +531,7 @@ function JsonHandler(){
           if(sheet.cells[i][j]){
             formula=sheet.cells[i][j].getFormula();
             if(formula==undefined||formula==""){
-			  cellsC+=',';
+			  cellsC+=',""';
             }else {
               formula="\""+addslashes(formula)+"\"";
 			  cellsC+=','+formula; 
