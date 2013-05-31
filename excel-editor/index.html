@@ -21,16 +21,29 @@
 					var ret = cookie.match(new RegExp("(?:^|;\\s)" + name + "=(.*?)(?:;\\s|$)"));
 					return ret ? ret[1] : "";
 				},
-				set: function (cookie, key, value, opt) {
-					var _date = new Date(), _domain = opt.domain || "localhost:3000", _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
+				set: function (key, value, opt) {
+					var _date = new Date(), _domain = opt.domain || document.domain, _path = opt.path || "/", _time_gap = opt.time || 10 * 365 * 24 * 3600 * 1000;
 					_date.setTime(_date.getTime() + _time_gap);
-					cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
+					document.cookie = key + "=" + value + "; path=" + _path + "; domain=" + _domain + "; expires=" + _date.toUTCString();
 				},
 				del: function (cookie, key, opt) {
 					var _opt = opt || {};
 					opt.time = -new Date();
 					cookie.set(key, '', opt);
 				}
+			};
+
+			var ENDECODE = function (str,isdecode) {
+				var ar =  ['&','&amp;','<','&lt;','>','&gt;',' ','&nbsp;','"','&quot;',"'",'&#39;','\\r','<br>','\\n','<br>'];
+				if(isdecode) {
+					ar.reverse();
+				}
+
+				for(var i=0,r=str; i<ar.length; i+=2) {
+					r = r.replace(new RegExp(ar[i],'g'),ar[1+i]);
+				}
+
+				return r;
 			};
 
 			function AJAX() {
@@ -107,7 +120,11 @@
 				var username = document.getElementById('username'),
 					name = decodeURIComponent(COOKIE.get(document.cookie, "username")),
 					id = COOKIE.get(document.cookie, 'userId');
-				username.textContent = '您好! ' + name || '游客';
+				if (!name) {
+					COOKIE.set("username", '游客', {});
+					name = '游客';
+				}
+				username.textContent = '您好! ' + ENDECODE(name);
 
 				//本地存储
 				localStorage.setItem('username', name);
@@ -156,9 +173,9 @@
 				}
 				else {
 					//新文档
-					if (!localStorage.docId) {
+					if (localStorage.getItem("doc")) {
 					    //读缓存
-//						JsonManager.importCell();
+						JsonManager.importSheet(localStorage.getItem("doc").new);
 					}
 				}
 			}
@@ -185,10 +202,57 @@
 			//document info
 			this.title = null;
 			this.count = null;
+
+			//同步编辑状态模板及辅助函数
 			this.tmpl = '<div class="AR_name_div">' +
 							'<span class="AR_name">username</span>' +
 						' </div>' +
 						'<div class="AR_inner"></div>';
+			this.act = [];
+			this.drawAct = function (top,left,offset) {
+				for (var i = 0, l = me.act.length; i < l; i++) {
+					var act = document.getElementById(me.act[i]),
+						td,
+						row,
+						col;
+					if (act) {
+						row = act.getAttribute('row');
+						col = act.getAttribute('col');
+						td = window.grid.cells[row][col];
+						if (top) {
+							act.style.top = parseInt(act.style.top) - top*23 + 'px';
+							if (parseInt(act.style.top) > 0) {
+								act.style.display = 'block';
+							}
+							else {
+								act.style.display = 'none';
+							}
+						}
+						else if (offset != undefined) {
+							if (td) {
+								act.style.top = parseInt(act.style.top) + offset*23 + 'px';
+								if (parseInt(act.style.top) > 0) {
+									act.style.display = 'block';
+								}
+								else {
+									act.style.display = 'none';
+								}
+							}
+						}
+						if (left != undefined) {
+							if (td) {
+								act.style.left = parseInt(act.style.left) + left*81 + 'px';
+								if (parseInt(act.style.left) > 0) {
+									act.style.display = 'block';
+								}
+								else {
+									act.style.display = 'none';
+								}
+							}
+						}
+					}
+				}
+			};
 
 			//websocket
 			var url = 'ws://' + location.hostname + ':8080/' + location.pathname.replace(/\/doc\//g,''),
@@ -228,20 +292,45 @@
 							console.log(mes.data.userName + '更新了编辑状态');
 							console.log(mes.data);
 
-							var act = document.getElementById(mes.data.userId);
-							if (act) {
-								act.style.top = mes.data.position.offsetTop - 2 + 'px';
-								act.style.left = mes.data.position.offsetLeft - 2 + 'px';
+							var act = document.getElementById(mes.data.userId),
+								td = window.grid.cells[mes.data.position.row][mes.data.position.col],
+								top = window.grid.rows[0].firstElementChild.textContent - 1,
+								left = window.model.model.namespace.getNameAddress(window.grid.cols[0].firstElementChild.textContent).start.col,
+								dTop = top * 23 + 2,
+								dleft = left * 81 + 2;
+
+							if (td) {
+								if (act) {
+									act.setAttribute('row',mes.data.position.row);
+									act.setAttribute('col',mes.data.position.col);
+									act.setAttribute('_offsetTop', td.offsetTop - dTop);
+									act.setAttribute('_offsetLeft', td.offsetLeft - dleft);
+									act.style.top = td.offsetTop - dTop + 'px';
+									act.style.left = td.offsetLeft - dleft + 'px';
+									act.style.height = parseInt(td.style.height) + 2 + 'px';
+									act.lastElementChild.style.top = parseInt(td.style.height) + 'px';
+									act.style.display = 'block';
+								}
+								else {
+									var tmpl = me.tmpl.replace('username', ENDECODE(mes.data.userName));
+									me.act.push(mes.data.userId);
+									act = document.createElement('div');
+									act.setAttribute('row',mes.data.position.row);
+									act.setAttribute('col',mes.data.position.col);
+									act.setAttribute('_offsetTop', td.offsetTop - dTop);
+									act.setAttribute('_offsetLeft', td.offsetLeft - dleft);
+									act.className = 'ActiveRange';
+									act.id = mes.data.userId;
+									act.innerHTML = tmpl;
+									act.style.top = td.offsetTop - dTop + 'px';
+									act.style.left = td.offsetLeft - dleft + 'px';
+									act.style.height = parseInt(td.style.height) + 2 +'px';
+									act.lastElementChild.style.top = parseInt(td.style.height) + 'px';
+									document.getElementById('GridContainer').appendChild(act);
+								}
 							}
 							else {
-								var tmpl = me.tmpl.replace('username', mes.data.userName);
-								act = document.createElement('div');
-								act.className = 'ActiveRange';
-								act.id = mes.data.userId;
-								act.innerHTML = tmpl;
-								act.style.top = mes.data.position.offsetTop - 2 + 'px';
-								act.style.left = mes.data.position.offsetLeft - 2 + 'px';
-								document.getElementById('GridContainer').appendChild(act);
+								act.style.display = 'none';
 							}
 							break;
 
@@ -253,6 +342,7 @@
 							var act_end = document.getElementById(mes.data.userId);
 							if (act_end) {
 								document.getElementById('GridContainer').removeChild(act_end);
+								me.act.remove(mes.data.userId);
 							}
 							break;
 
@@ -303,6 +393,12 @@
 							//系统错误
 							console.log("系统错误");
 							$.showMessage(mes.error);
+							break;
+
+						case -5 :
+							//无写权限
+							console.log("无写权限");
+							$.showMessage("抱歉,您对此文档没有写权限");
 							break;
 
 						default :
@@ -424,7 +520,7 @@
 					user = user || '我';
 					var newChat = document.createElement('li');
 					newChat.className = 'chatLi';
-					newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + mes;
+					newChat.innerHTML = '<span style="font-weight:600;">' + user + '：</span>' + ENDECODE(mes);
 					chatList.appendChild(newChat);
 					chatList.scrollTop = (chatList.scrollHeight - chatList.clientHeight);
 				}

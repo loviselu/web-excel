@@ -198,6 +198,7 @@ wss.on('connection', function (socket) {
 
 								case -3 :
 									//没有权限
+									socket.send('{"code":-5, "error":"没有写权限"}');
 									break;
 
 								case 1 :

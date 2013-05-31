@@ -3431,6 +3431,9 @@ function addModelNavigation(self,grid){
       self.selection.setSelection(new Range({row:self.activeCell.row,col:self.activeCell.col},{row:self.activeCell.row,col:self.activeCell.col}));
       if(self.viewport.start.row>self.activeCell.row){
         self.onMove(0,-1);
+		  if (doc) {
+			  doc.drawAct(0,0,1);
+		  }
       }
       self.refresh();
     }
@@ -3443,6 +3446,9 @@ function addModelNavigation(self,grid){
       self.selection.setSelection(new Range({row:self.activeCell.row,col:self.activeCell.col},{row:self.activeCell.row,col:self.activeCell.col}));
       if(self.activeCell.row>=self.viewport.end.row){
         self.onMove(0,1);
+		  if (doc) {
+			  doc.drawAct(0,0,-1);
+		  }
       }
       self.refresh();
     }
@@ -3455,6 +3461,9 @@ function addModelNavigation(self,grid){
       self.selection.setSelection(new Range({row:self.activeCell.row,col:self.activeCell.col},{row:self.activeCell.row,col:self.activeCell.col}));
       if(!self.isRangeVisible(self.activeCell.row,self.activeCell.col)){
         self.onMove(-1,0);
+		  if (doc) {
+			  doc.drawAct(0,1);
+		  }
       }
       self.refresh();
     }
@@ -3467,6 +3476,9 @@ function addModelNavigation(self,grid){
       self.selection.setSelection(new Range({row:self.activeCell.row,col:self.activeCell.col},{row:self.activeCell.row,col:self.activeCell.col}));
       if(!self.isRangeVisible(self.activeCell.row,self.activeCell.col)){
         self.onMove(1,0);
+		  if (doc) {
+			  doc.drawAct(0,-1);
+		  }
       }
       self.refresh();
     }
@@ -3569,22 +3581,30 @@ function addModelNavigation(self,grid){
     self.refresh();
   };
   grid.onHorizontalScroll=function(left){
-    var offset=self.viewport.end.col-self.viewport.start.col;
+    var offset=self.viewport.end.col-self.viewport.start.col,
+		col = self.viewport.start.col - parseInt(left/80);
     self.viewport.start.col=parseInt(left/80);
     self.viewport.end.col=parseInt(left/80)+offset;
     if(self.viewport.end.col*80+self.scrollPageOffset.x>grid.getWidth()){
       grid.setWidth(grid.getWidth()+self.scrollPageOffset.x);
     }
+	if (doc) {
+		doc.drawAct(0,col);
+	}
     self.refresh();
   };
   grid.onVerticalScroll=function(top){
-    var offset=self.viewport.end.row-self.viewport.start.row;
+    var offset=self.viewport.end.row-self.viewport.start.row,
+		row = self.viewport.start.row - parseInt(top/18);
     self.viewport.start.row=parseInt(top/18);
     grid.adjustViewPortY();
     self.viewport.end.row=self.viewport.start.row+grid.viewport.row;
     if(self.viewport.end.row*18+self.scrollPageOffset.y>grid.getHeight()){
       grid.setHeight(grid.getHeight()+self.scrollPageOffset.y);
     }
+	if (doc) {
+		doc.drawAct(0,0,row);
+	}
     self.refresh();
   };
   grid.scrollDown=function(offset){
@@ -3597,6 +3617,9 @@ function addModelNavigation(self,grid){
         grid.setHeight(grid.getHeight()+self.scrollPageOffset.y);
       }
       self.refresh();
+		if (doc) {
+			doc.drawAct(offset);
+		}
     }
   };
 }
