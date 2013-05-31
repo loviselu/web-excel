@@ -584,24 +584,28 @@ function JsonHandler(){
 	}
 	
   }
-  //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理
+  //判断data存储的旧值是否与本地现有的值一致，一致则覆盖，不一致则冲突不做处理，等后端冲突消息到来在做处理。本地单元格正在编辑也不做处理。
   self.importCell = function(data){
 	var sheet=application.activeSheet;
 	var address=window.model.model.namespace.getNameAddress(data.key);	
 	var localVal = sheet.getFormula(address.start.row,address.start.col);
+	var fontStyleId = sheet.getCellFontStyleId(address.start.row,address.start.col);
 	if(data.old){
 		var oldVal = data.old.f;
 	}
-	if(!data.old||localVal==oldVal){
-		self.importFontStyles(Array(data.present.fs));
-		sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
-		sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
-		var cell = window.model.model.getCell(address.start.row,address.start.col);
-		cell.setOldFormula(localVal);
-		cell.setOldFontStyleId(data.present.fs.charAt(0));
-		window.FormulaBar.setValue(data.present.f||"");
-		application.model.refresh();
+	if(address.start.row!=model.activeCell.row||address.start.col!=model.activeCell.col){
+		if(!data.old||localVal==oldVal||data.old.fs.charAt(0)==fontStyleId){
+			self.importFontStyles(Array(data.present.fs));
+			sheet.setFormula(address.start.row,address.start.col,stripslashes(data.present.f||""),true);
+			sheet.setCellFontStyleId(address.start.row,address.start.col,data.present.fs.charAt(0),true);
+			var cell = window.model.model.getCell(address.start.row,address.start.col);
+			cell.setOldFormula(localVal);
+			cell.setOldFontStyleId(data.present.fs.charAt(0));
+			window.FormulaBar.setValue(data.present.f||"");
+			application.model.refresh();
+		}
 	}
+	
 
   }
   // self.exportBook=function(id,book,sheet){
