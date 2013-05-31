@@ -33,6 +33,11 @@ exports.routes = [
 		'handler': 'setAuth'
 	},
 	{
+		'pattern': '/file/getAuth',
+		'method': 'get',
+		'handler': 'getAuth'
+	},
+	{
 		'pattern': '/file/moveToRecycle',
 		'method': 'post',
 		'handler': 'moveToRecycle'
@@ -331,6 +336,97 @@ exports.setAuth = function(req,res){
 						})
 					}
 				}
+			})
+		})
+	})
+}
+
+/**
+ * 读出文件权限
+ * GET ：
+ *  fileID
+ *
+ * return：
+ *  readList
+ *  writeList
+ *  allCanRead
+ *  allCanWrite
+ */
+exports.getAuth = function(req,res){
+	fileID = req.query.fileID;
+	if(!fileID && fileID.length !== 24 ){
+		res.json({'code':-2,message:'fileID不合法'});
+		return;
+	}
+
+	database.ready(function(db){
+		db.collection('file', function (err, file) {
+			file.findOne({_id:ObjectID(fileID)},{owner:1,writeable_list:1,readable_list:1},function(err,result){
+				if(err){
+					res.json({'code':-1,message:'数据库出错'});
+					return;
+				}
+				if(result.owner !== req.session.userId){
+					res.json({'code':-4,message:'无权限访问'});
+					return;
+				}
+
+				var returnData = {
+					allCanWrite:false,
+					writeList  :[],
+					allCanRead:false,
+					readList:[]
+				};
+
+				var deferWrite = Deferred();
+				var deferRead = Deferred();
+
+				Deferred.when(deferWrite,deferRead).done(function(){
+					res.json({'code':0,data:returnData});
+				}).fail(function(){
+					res.json({'code':-1,message:'数据库出错'});
+				})
+
+				if(!result.writeable_list || result.writeable_list === 'all'){
+					returnData.allCanWrite = true;
+					deferWrite.resolve();
+				}else if(result.writeable_list === 'none'){
+					returnData.writeList = [];
+					deferWrite.resolve();
+				}else{
+					db.collection('user',function(err,user){
+						if(err){
+							deferWrite.reject();
+						}
+						user.find({_id:{$in:result.writeable_list}},{username:1}).toArray(function(err,data){
+							returnData.writeList = data.map(function(v){
+							   return v.username;
+						   })
+							deferWrite.resolve();
+						})
+					})
+				}
+
+				if(!result.readable_list || result.readable_list === 'all'){
+					returnData.allCanRead = true;
+					deferRead.resolve();
+				}else if(result.readable_list === 'none'){
+					returnData.readList = [];
+					deferRead.resolve();
+				}else{
+					db.collection('user',function(err,user){
+						if(err){
+							deferRead.reject();
+						}
+						user.find({_id:{$in:result.readable_list}},{username:1}).toArray(function(err,data){
+							returnData.readList = data.map(function(v){
+								return v.username;
+							})
+							deferRead.resolve();
+						})
+					})
+				}
+
 			})
 		})
 	})
