@@ -278,7 +278,33 @@ $(function(){
 	//操作-设置权限
 	$('#command_list .js_setAuth').on('click',function(){
 		$('#command_list').hide();
-		$('#shareDialog').autoPosition().show();
+		var fileID = $('#fileBoard .my_files .activeItem').data('fileid');
+		$.get('/file/getAuth',{fileID:fileID},function(result){
+			console.log(result);
+			if(result.code === 0){
+				if(result.data.allCanRead){
+					$("#shareDialog input[name=allCanRead]").attr('checked',true);
+				}else{
+					$("#shareDialog input[name=allCanRead]").attr('checked',false);
+				}
+				$("#shareDialog textarea[name=readList]").val(result.data.readList.join(','));
+
+				if(result.data.allCanWrite){
+					$("#shareDialog input[name=allCanWrite]").attr('checked',true);
+				}else{
+					$("#shareDialog input[name=allCanWrite]").attr('checked',false);
+				}
+				$("#shareDialog textarea[name=writeList]").val(result.data.writeList.join(','));
+			}else{
+				$.showMessage('加载文件权限列表失败');
+
+				$("#shareDialog input[name=allCanRead]").attr('checked',false);
+				$("#shareDialog input[name=allCanWrite]").attr('checked',false);
+				$("#shareDialog textarea[name=readList]").val('');
+				$("#shareDialog textarea[name=writeList]").val('');
+			}
+			$('#shareDialog').autoPosition().show();
+		})
 	})
 
 	//权限设定弹窗确定按钮
